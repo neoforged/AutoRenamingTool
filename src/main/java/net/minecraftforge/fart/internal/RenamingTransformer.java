@@ -5,11 +5,7 @@
 
 package net.minecraftforge.fart.internal;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,6 +18,8 @@ import java.util.stream.Collectors;
 import com.google.gson.JsonObject;
 import net.neoforged.javadoctor.io.gson.GsonJDocIO;
 import net.neoforged.javadoctor.spec.ClassJavadoc;
+import net.neoforged.javadoctor.spec.DocReferences;
+import net.neoforged.javadoctor.spec.JavadoctorInformation;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -63,11 +61,16 @@ public class RenamingTransformer implements Transformer {
 
     @Override
     public JavadoctorEntry process(JavadoctorEntry entry) {
-        final Map<String, ClassJavadoc> docs = GsonJDocIO.read(GsonJDocIO.GSON, GsonJDocIO.GSON.fromJson(new String(entry.getData()), JsonObject.class));
-        final JavadoctorRemapper remapper = new JavadoctorRemapper(this.remapper);
+        final JavadoctorInformation docs = GsonJDocIO.read(GsonJDocIO.GSON, GsonJDocIO.GSON.fromJson(new String(entry.getData()), JsonObject.class));
+        final JavadoctorRemapper remapper = new JavadoctorRemapper(this.remapper, docs.getReferences());
         final Map<String, ClassJavadoc> newEntries = new HashMap<>();
-        docs.forEach((clazz, jdoc) -> newEntries.put(this.remapper.map(clazz.replace('.', '/')).replace('/', '.'), remapper.remap(clazz, clazz.replace('.', '/'), jdoc)));
-        return JavadoctorEntry.create(entry.getTime(), GsonJDocIO.GSON.toJson(GsonJDocIO.write(GsonJDocIO.GSON, newEntries)).getBytes(StandardCharsets.UTF_8));
+        docs.getClassDocs().forEach((clazz, jdoc) -> newEntries.put(this.remapper.map(clazz.replace('.', '/')).replace('/', '.'), remapper.remap(clazz, clazz.replace('.', '/'), jdoc)));
+        final Map<String, String> referencedClasses = new HashMap<>(docs.getReferences().getClasses().size(), 1f);
+        docs.getReferences().getClasses().forEach((key, internal) -> {
+            final String mapped = this.remapper.map(internal);
+            referencedClasses.put(mapped.replace('/', '.').replace('$', '.'), mapped);
+        });
+        return JavadoctorEntry.create(entry.getTime(), GsonJDocIO.GSON.toJson(GsonJDocIO.write(GsonJDocIO.GSON, new JavadoctorInformation(new DocReferences(referencedClasses), newEntries))).getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

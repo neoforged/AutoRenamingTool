@@ -6,6 +6,7 @@
 package net.minecraftforge.fart.internal;
 
 import net.neoforged.javadoctor.spec.ClassJavadoc;
+import net.neoforged.javadoctor.spec.DocReferences;
 import net.neoforged.javadoctor.spec.JavadocEntry;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -34,12 +35,14 @@ import static org.objectweb.asm.Type.SHORT;
 
 public class JavadoctorRemapper {
     public static final Pattern LINKS = Pattern.compile("@(?<tag>link|linkplain|see|value)(?<space>\\s+)(?<owner>[\\w$.]*)(?:#(?<member>[\\w%]+)?(?<descFull>\\((?<desc>[\\w$., \\[\\]]+)?\\))?)?");
-    public static final Pattern LINKS_IN = Pattern.compile("(?<owner>[\\w$.]*)(?:#(?<member>[\\w%]+)?(?<descFull>\\((?<desc>[\\w$., \\[\\]]+)?\\))?)?");
+    public static final Pattern LINKS_IN = Pattern.compile("^(?<owner>[\\w$.]*)(?:#(?<member>[\\w%]+)?(?<descFull>\\((?<desc>[\\w$., \\[\\]]+)?\\))?)?");
 
     private final EnhancedRemapper remapper;
+    private final DocReferences references;
 
-    public JavadoctorRemapper(EnhancedRemapper remapper) {
+    public JavadoctorRemapper(EnhancedRemapper remapper, DocReferences references) {
         this.remapper = remapper;
+        this.references = references;
     }
 
     public ClassJavadoc remap(String containedClass, String containedInternalName, ClassJavadoc doc) {
@@ -47,7 +50,8 @@ public class JavadoctorRemapper {
         doc.innerClasses().forEach((name, cdoc) -> {
             final String innerName = containedClass + "." + name;
             final String innerInternal = containedInternalName + "$" + name;
-            inners.put(remapper.map(innerInternal), remap(innerName, innerInternal, cdoc));
+            final String remappedInner = remapper.map(innerInternal);
+            inners.put(remappedInner.substring(remappedInner.lastIndexOf('$') + 1), remap(innerName, innerInternal, cdoc));
         });
         return new ClassJavadoc(
                 doc.clazz() == null ? null : remap(containedClass, doc.clazz()),
@@ -75,21 +79,21 @@ public class JavadoctorRemapper {
 
     private JavadocEntry remap(String containedClass, JavadocEntry entry) {
         return new JavadocEntry(
-                entry.doc() == null ? null : replaceLinks(containedClass, entry.doc(), LINKS.matcher(entry.doc()), matcher -> "@" + matcher.group(1) + matcher.group(2)),
+                entry.doc() == null ? null : replaceLinks(containedClass, LINKS.matcher(entry.doc()), matcher -> "@" + matcher.group(1) + matcher.group(2)),
                 entry.tags() == null ? null : mapTags(containedClass, entry.tags()),
                 entry.parameters() == null ? null : mapParams(containedClass, entry.parameters()),
                 entry.typeParameters() == null ? null : mapParams(containedClass, entry.typeParameters())
         );
     }
 
-    private Map<String, List<String>> mapTags(String containedClass, @Nullable Map<String, List<String>> in) {
+    private Map<String, List<String>> mapTags(String containedClass, Map<String, List<String>> in) {
         final Map<String, List<String>> tags = new HashMap<>(in.size(), 1f);
         in.forEach((tagName, values) -> {
             final List<String> newValues = new ArrayList<>(values);
             if (tagName.equals("see")) {
-                newValues.replaceAll(seeTag -> replaceLinks(containedClass, seeTag, LINKS_IN.matcher(seeTag), matcher -> ""));
+                newValues.replaceAll(seeTag -> replaceLinks(containedClass, LINKS_IN.matcher(seeTag), matcher -> ""));
             } else {
-                newValues.replaceAll(tag -> replaceLinks(containedClass, tag, LINKS.matcher(tag), matcher -> "@" + matcher.group(1) + matcher.group(2)));
+                newValues.replaceAll(tag -> replaceLinks(containedClass, LINKS.matcher(tag), matcher -> "@" + matcher.group(1) + matcher.group(2)));
             }
             tags.put(tagName, newValues);
         });
@@ -101,40 +105,39 @@ public class JavadoctorRemapper {
         for (int i = 0; i < params.length; i++) {
             String param = params[i];
             if (param != null) {
-                param = replaceLinks(containedClass, param, LINKS.matcher(param), matcher -> "@" + matcher.group(1) + matcher.group(2));
+                param = replaceLinks(containedClass, LINKS.matcher(param), matcher -> "@" + matcher.group(1) + matcher.group(2));
             }
             newParams[i] = param;
         }
         return newParams;
     }
 
-    private String replaceLinks(String containedClass, String text, Matcher matcher, Function<Matcher, String> prefix) {
+    private String replaceLinks(String containedClass, Matcher matcher, Function<Matcher, String> prefix) {
         StringBuffer sb = new StringBuffer();
         while (matcher.find()) {
             final String matchedOwner = matcher.group("owner");
-            final String owner = ((matchedOwner == null || matchedOwner.isEmpty()) ? containedClass : matchedOwner).replace('.', '/');
+            final String owner = references.getInternalName((matchedOwner == null || matchedOwner.isEmpty()) ? containedClass : matchedOwner);
+            final String mappedOwner = remapper.map(owner);
             StringBuilder replacement = new StringBuilder().append(prefix.apply(matcher))
-                    .append(remapper.map(owner).replace('/', '.'));
+                    .append(mappedOwner.replace('/', '.').replace('$', '.'));
 
-            {
-                final String member = matcher.group("member");
-                if (member != null) {
-                    replacement.append('#');
-                    final String descFull = matcher.group("descFull");
-                    final boolean hasDesc = descFull != null && !descFull.isEmpty();
-                    String desc = matcher.group("desc");
-                    if (hasDesc) {
-                        final String finalDesc = desc == null ? "" : desc;
-                        final String[] descSplit = finalDesc.split("\\.");
-                        replacement.append(remapper.mapJavadocMember(owner, member, descSplit.length)
-                                .orElseGet(() -> member + "(" + finalDesc + ")"));
-                    } else {
-                        replacement.append(remapper.mapFieldName(owner, member, null));
-                    }
+            final String member = matcher.group("member");
+            if (member != null) {
+                replacement.append('#');
+                final String descFull = matcher.group("descFull");
+                final boolean hasDesc = descFull != null && !descFull.isEmpty();
+                String desc = matcher.group("desc");
+                if (hasDesc) {
+                    final String finalDesc = desc == null ? "" : desc;
+                    final String[] descSplit = finalDesc.isEmpty() ? new String[0] : finalDesc.split(",");
+                    replacement.append(remapper.mapJavadocMember(owner, member, descSplit.length)
+                            .orElseGet(() -> member + "(" + finalDesc + ")"));
                 } else {
-                    matcher.appendReplacement(sb, matcher.group(0));
-                    continue;
+                    replacement.append(remapper.mapFieldName(owner, member, null));
                 }
+            } else if (mappedOwner.equals(owner)) {
+                matcher.appendReplacement(sb, matcher.group(0));
+                continue;
             }
 
             matcher.appendReplacement(sb, replacement.toString());
@@ -161,7 +164,7 @@ public class JavadoctorRemapper {
             case SHORT: return "short";
             case BYTE: return "byte";
             case OBJECT: return type.getInternalName().replace('/', '.');
-            case ARRAY: return getJavadocDesc(type.getElementType()) + "[]";
+            case ARRAY: return getJavadocType(type.getElementType()) + "[]";
             default:
                 throw new UnsupportedOperationException("Unknown type in javadoc: " + type.getSort());
         }
