@@ -1,10 +1,10 @@
 buildscript {
     repositories {
         mavenCentral()
-        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://maven.neoforged.net/' }
     }
     dependencies {
-        classpath  group: 'net.minecraftforge.gradleutils', name: 'GradleUtils', version: '2.+', changing: true
+        classpath  group: 'net.neoforged.gradleutils', name: 'GradleUtils', version: '[2.0.18,)', changing: true
     }
 }
 
@@ -15,10 +15,10 @@ plugins {
     id 'org.cadixdev.licenser' version '0.6.1'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
-apply plugin: 'net.minecraftforge.gradleutils'
+apply plugin: 'net.neoforged.gradleutils'
 
-group 'net.minecraftforge'
-version = gradleutils.getTagOffsetBranchVersion(null, 'master', 'HEAD')
+group 'net.neoforged'
+version = gradleutils.getTagOffsetBranchVersion(null, 'main', 'HEAD')
 println('Version: ' + version)
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
@@ -26,25 +26,25 @@ compileJava.options.encoding = 'UTF-8'
 
 ext {
     CHANGELOG = rootProject.file('build/changelog.txt')
-    REPO = 'ForgeAutoRenamingTool'
-    TITLE = 'Forge Auto Renaming Tool'
+    REPO = 'AutoRenamingTool'
+    TITLE = 'Auto Renaming Tool'
     MANIFEST = manifest{
         attributes('Main-Class': 'net.minecraftforge.fart.Main')
         attributes([
-            'Specification-Title':      'ForgeAutoRenamingTool',
-            'Specification-Vendor':     'Forge Development LLC',
+            'Specification-Title':      'AutoRenamingTool',
+            'Specification-Vendor':     'Neo Forged',
             'Specification-Version':    gradleutils.gitInfo.tag,
-            'Implementation-Title':     'SimpleInstaller',
+            'Implementation-Title':     'ART',
             'Implementation-Version':   project.version,
-            'Implementation-Vendor':    'Forge Development LLC'
+            'Implementation-Vendor':    'NeoForged'
         ] as LinkedHashMap, 'net/minecraftforge/fart/')
     }
-    INITIAL_CHANGELOG_TAG = '0.1'
+    INITIAL_CHANGELOG_TAG = '1.0'
 }
 
 repositories {
     mavenCentral()
-    maven { url = 'https://maven.minecraftforge.net/' }
+    maven { url = 'https://maven.neoforged.net/' }
 }
 
 test {
@@ -62,6 +62,7 @@ dependencies {
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.ow2.asm:asm-commons:9.5'
     implementation 'org.ow2.asm:asm-tree:9.5'
+    implementation 'net.neoforged.javadoctor:gson-io:1.0.12'
 
     testImplementation(platform('org.junit:junit-bom:5.8.1'))
     testImplementation('org.junit.jupiter:junit-jupiter')
@@ -104,28 +105,21 @@ publishing {
             pom {
                 name = TITLE
                 description = 'A tool that renames java bytecode elements.'
-                url = "https://github.com/MinecraftForge/${REPO}"
+                url = "https://github.com/neoforged/${REPO}"
                 scm {
-                    url = "https://github.com/MinecraftForge/${REPO}"
-                    connection = "scm:git:git://github.com/MinecraftForge/${REPO}.git"
-                    developerConnection = "scm:git:git@github.com:MinecraftForge/${REPO}.git"
+                    url = "https://github.com/neoforged/${REPO}"
+                    connection = "scm:git:git://github.com/neoforged/${REPO}.git"
+                    developerConnection = "scm:git:git@github.com:neoforged/${REPO}.git"
                 }
                 issueManagement {
                     system = 'github'
-                    url = "https://github.com/MinecraftForge/${REPO}/issues"
+                    url = "https://github.com/neoforged/${REPO}/issues"
                 }
 
                 licenses {
                     license {
                         name = 'LGPLv2.1'
                         url = 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id = 'LexManos'
-                        name = 'LexManos'
                     }
                 }
             }

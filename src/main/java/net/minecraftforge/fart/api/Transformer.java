@@ -60,6 +60,16 @@ public interface Transformer {
     }
 
     /**
+     * Processes a javadoctor entry and returns the transformed entry.
+     *
+     * @param entry the original entry
+     * @return the transformed entry
+     */
+    default JavadoctorEntry process(JavadoctorEntry entry) {
+        return entry;
+    }
+
+    /**
      * Returns extra entries to add to the JAR file.
      */
     default Collection<? extends Entry> getExtras() {
@@ -240,7 +250,7 @@ public interface Transformer {
 
     /**
      * A {@code ResourceEntry} represents a generic resource entry in a JAR file
-     * that is not a class file or manifest.
+     * that is not a class file, manifest or {@code javadoctor.json} file.
      */
     public interface ResourceEntry extends Entry {
         /**
@@ -270,6 +280,23 @@ public interface Transformer {
          */
         static ManifestEntry create(long time, byte[] data) {
             return new EntryImpl.ManifestEntry(time, data);
+        }
+    }
+
+    /**
+     * A {@code JavadoctorEntry} represents a {@code javadoctor.json} entry in a JAR file.
+     */
+    public interface JavadoctorEntry extends Entry {
+        /**
+         * Creates a default manifest entry.
+         * The name of this entry is always {@code META-INF/MANIFEST.MF}.
+         *
+         * @param time the last modification time
+         * @param data the raw manifest bytes
+         * @return the manifest entry
+         */
+        static JavadoctorEntry create(long time, byte[] data) {
+            return new EntryImpl.JavadoctorEntry(time, data);
         }
     }
 

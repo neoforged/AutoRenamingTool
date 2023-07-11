@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Handle;
@@ -63,6 +64,18 @@ class EnhancedRemapper extends Remapper {
             .flatMap(c -> c.getField(name, descriptor))
             .map(MClass.MField::getMapped)
             .orElse(name);
+    }
+
+    public Optional<String> mapJavadocMember(final String owner, final String name, final int paramCount) {
+        return findMethod(owner, name, paramCount)
+                .map(method -> method.getMapped() + JavadoctorRemapper.getJavadocDesc(Type.getMethodType(mapMethodDesc(method.getDescriptor()))));
+    }
+
+    private Optional<MClass.MMethod> findMethod(final String owner, final String name, final int paramCount) {
+        return stream(getClass(owner))
+                .flatMap(c -> c.getMethods().stream().flatMap(EnhancedRemapper::stream))
+                .filter(m -> m.getName().equals(name) && Type.getMethodType(m.getDescriptor()).getArgumentTypes().length == paramCount)
+                .findFirst();
     }
 
     @Override
@@ -132,6 +145,10 @@ class EnhancedRemapper extends Remapper {
         if (!icls.isPresent() && mcls == null)
             return Optional.empty();
         return Optional.of(new MClass(icls.orElse(null), mcls));
+    }
+
+    private static <T> Stream<T> stream(Optional<T> optional) {
+        return optional.isPresent() ? Stream.of(optional.get()) : Stream.empty();
     }
 
     private class MClass {

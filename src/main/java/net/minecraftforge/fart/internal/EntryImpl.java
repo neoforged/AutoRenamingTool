@@ -95,4 +95,15 @@ public abstract class EntryImpl implements Transformer.Entry {
             return transformer.process(this);
         }
     }
+
+    public static class JavadoctorEntry extends EntryImpl implements Transformer.JavadoctorEntry {
+        public JavadoctorEntry(long time, byte[] data) {
+            super("javadoctor.json", time, data);
+        }
+
+        @Override
+        public Transformer.JavadoctorEntry process(Transformer transformer) {
+            return transformer.process(this);
+        }
+    }
 }

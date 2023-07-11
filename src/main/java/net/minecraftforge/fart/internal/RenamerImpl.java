@@ -91,6 +91,8 @@ class RenamerImpl implements Renamer {
                     oldEntries.add(ClassEntry.create(name, e.getTime(), data));
                 else if (name.equals(MANIFEST_NAME))
                     oldEntries.add(ManifestEntry.create(e.getTime(), data));
+                else if (name.equals("javadoctor.json"))
+                    oldEntries.add(Transformer.JavadoctorEntry.create(e.getTime(), data));
                 else
                     oldEntries.add(ResourceEntry.create(name, e.getTime(), data));
             });
