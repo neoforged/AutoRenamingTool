@@ -32,10 +32,10 @@ project {
     buildType(PullRequests)
 
     params {
-        text("git_main_branch", "master", label = "Git Main Branch", description = "The git main or default branch to use in VCS operations.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
-        text("github_repository_name", "ForgeAutoRenamingTool", label = "The github repository name. Used to connect to it in VCS Roots.", description = "This is the repository slug on github. So for example `ForgeAutoRenamingTool` or `MinecraftForge`. It is interpolated into the global VCS Roots.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
-        text("env.PUBLISHED_JAVA_ARTIFACT_ID", "ForgeAutoRenamingTool", label = "Published artifact id", description = "The maven coordinate artifact id that has been published by this build. Can not be empty.", allowEmpty = false)
-        text("env.PUBLISHED_JAVA_GROUP", "net.minecraftforge", label = "Published group", description = "The maven coordinate group that has been published by this build. Can not be empty.", allowEmpty = false)
+        text("git_main_branch", "main", label = "Git Main Branch", description = "The git main or default branch to use in VCS operations.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
+        text("github_repository_name", "AutoRenamingTool", label = "The github repository name. Used to connect to it in VCS Roots.", description = "This is the repository slug on github. So for example `ForgeAutoRenamingTool` or `MinecraftForge`. It is interpolated into the global VCS Roots.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
+        text("env.PUBLISHED_JAVA_ARTIFACT_ID", "AutoRenamingTool", label = "Published artifact id", description = "The maven coordinate artifact id that has been published by this build. Can not be empty.", allowEmpty = false)
+        text("env.PUBLISHED_JAVA_GROUP", "net.neoforged", label = "Published group", description = "The maven coordinate group that has been published by this build. Can not be empty.", allowEmpty = false)
         text("docker_jdk_version", "8", label = "JDK version", description = "The version of the JDK to use during execution of tasks in a JDK.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("docker_gradle_version", "7.4.1", label = "Gradle version", description = "The version of Gradle to use during execution of Gradle tasks.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
     }
@@ -43,8 +43,8 @@ project {
     features {
         githubIssues {
             id = "ForgeAutoRenamingTool__IssueTracker"
-            displayName = "MinecraftForge/ForgeAutoRenamingTool"
-            repositoryURL = "https://github.com/MinecraftForge/ForgeAutoRenamingTool"
+            displayName = "NeoForged/AutoRenamingTool"
+            repositoryURL = "https://github.com/NeoForged/AutoRenamingTool"
         }
     }
 }
