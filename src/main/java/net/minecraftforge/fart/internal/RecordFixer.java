@@ -32,6 +32,10 @@ public class RecordFixer extends OptionalChangeTransformer {
         @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
             this.isRecord = "java/lang/Record".equals(superName);
+            if (isRecord && (access & Opcodes.ACC_RECORD) == 0) {
+                this.madeChange = true;
+                access |= Opcodes.ACC_RECORD;
+            }
             super.visit(version, access, name, signature, superName, interfaces);
         }
 
