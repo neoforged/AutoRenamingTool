@@ -9,20 +9,18 @@ permissions:
   statuses: write
 
 jobs:
-  build:
+  release:
     uses: neoforged/actions/.github/workflows/gradle-publish.yml@main
     with:
       java: 8
-      pre_gradle_tasks: 'licenseFormat'
-      gradle_tasks: 'publish closeAndReleaseSonatypeStagingRepository'
+      pre_gradle_tasks: test
+      gradle_tasks: publish closeAndReleaseSonatypeStagingRepository
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-
       MAVEN_USER: ${{ secrets.MAVEN_USER }}
       MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-
+      GPG_SUBKEY: ${{ secrets.GPG_SUBKEY }}
+      GPG_SUBKEY_ID: ${{ secrets.GPG_SUBKEY_ID }}
+      GPG_SUBKEY_PASSWORD: ${{ secrets.GPG_SUBKEY_PASSWORD }}
       SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
       SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      GPG_KEY_PASSWORD: ${{ secrets.GPG_KEY_PASSWORD }}
