@@ -1,12 +1,4 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        maven { url = 'https://maven.neoforged.net/' }
-    }
-    dependencies {
-        classpath  group: 'net.neoforged.gradleutils', name: 'GradleUtils', version: '[2.0.18,)', changing: true
-    }
-}
+import net.neoforged.gradleutils.PomUtilsExtension.License
 
 plugins {
     id 'eclipse'
@@ -15,20 +7,29 @@ plugins {
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
-    id 'io.github.gradle-nexus.publish-plugin' version '1.3.0'
+    id 'net.neoforged.gradleutils' version '3.0.0-alpha.5'
 }
 apply plugin: 'net.neoforged.gradleutils'
 
 group 'net.neoforged'
-version = gradleutils.getTagOffsetBranchVersion(null, 'main', 'HEAD')
+
+gradleutils {
+    version {
+        branches {
+            suffixBranch = true
+        }
+    }
+    setupCentralPublishing()
+    setupSigning(signAllPublications: true)
+}
+
+version = gradleutils.version
 println('Version: ' + version)
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 compileJava.options.encoding = 'UTF-8'
 
 ext {
-    CHANGELOG = rootProject.file('build/changelog.txt')
-    REPO = 'AutoRenamingTool'
     TITLE = 'Auto Renaming Tool'
     MANIFEST = manifest{
         attributes('Main-Class': 'net.minecraftforge.fart.Main')
@@ -101,16 +102,6 @@ shadowJar {
 
 assemble.dependsOn shadowJar
 
-nexusPublishing {
-    repositories {
-        sonatype {
-            username.set(System.getenv('SONATYPE_USER') ?: '')
-            password.set(System.getenv('SONATYPE_PASSWORD') ?: '')
-            nexusUrl.set(uri('https://s01.oss.sonatype.org/service/local/'))
-        }
-    }
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -118,49 +109,17 @@ publishing {
             pom {
                 name = TITLE
                 description = 'A tool that renames java bytecode elements.'
-                url = "https://github.com/neoforged/${REPO}"
-                scm {
-                    url = "https://github.com/neoforged/${REPO}"
-                    connection = "scm:git:git://github.com/neoforged/${REPO}.git"
-                    developerConnection = "scm:git:git@github.com:neoforged/${REPO}.git"
-                }
-                issueManagement {
-                    system = 'github'
-                    url = "https://github.com/neoforged/${REPO}/issues"
-                }
-
-                licenses {
-                    license {
-                        name = 'LGPLv2.1'
-                        url = 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id = 'neoforged'
-                        name = 'NeoForged'
-                        email = 'contact@neoforged.net'
-                        url = 'https://github.com/NeoForged/'
-                    }
-                }
+                pomUtils.neoForgedDeveloper(it)
+                pomUtils.license(it, License.LGPL_v2)
+                pomUtils.githubRepo(it, 'AutoRenamingTool')
             }
         }
     }
     repositories {
-        maven gradleutils.getPublishingForgeMaven()
-    }
-}
-
-if (System.getenv('GPG_PRIVATE_KEY')) {
-    signing {
-        final signingKey = System.getenv('GPG_PRIVATE_KEY') ?: ''
-        final signingPassword = System.getenv('GPG_KEY_PASSWORD') ?: ''
-        useInMemoryPgpKeys(signingKey, signingPassword)
-        sign publishing.publications.mavenJava
+        maven gradleutils.publishingMaven
     }
 }
 
 changelog {
-    fromTag INITIAL_CHANGELOG_TAG
+    from INITIAL_CHANGELOG_TAG
 }
