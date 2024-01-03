@@ -47,7 +47,7 @@ ext {
 
 repositories {
     mavenCentral()
-    maven { url = 'https://maven.neoforged.net/' }
+    maven { url = 'https://maven.neoforged.net/releases' }
 }
 
 test {
@@ -62,6 +62,7 @@ license {
 dependencies {
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
     api 'net.minecraftforge:srgutils:0.5.1'
+    api 'net.neoforged.installertools:cli-utils:2.1.0'
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.ow2.asm:asm-commons:9.5'
     implementation 'org.ow2.asm:asm-tree:9.5'
@@ -92,7 +93,8 @@ shadowJar {
     def relocations = [
             'org.objectweb.asm',
             'net.minecraftforge.srgutils',
-            'joptsimple'
+            'joptsimple',
+            'net.neoforged.cliutils'
     ]
 
     relocations.forEach {
