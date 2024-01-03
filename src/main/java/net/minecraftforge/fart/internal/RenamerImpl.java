@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -19,6 +20,9 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
+import net.neoforged.cliutils.JarUtils;
+import net.neoforged.cliutils.progress.ProgressReporter;
 import org.objectweb.asm.Opcodes;
 
 import net.minecraftforge.fart.api.ClassProvider;
@@ -30,6 +34,7 @@ import net.minecraftforge.fart.api.Transformer.ManifestEntry;
 import net.minecraftforge.fart.api.Transformer.ResourceEntry;
 
 class RenamerImpl implements Renamer {
+    private static final ProgressReporter PROGRESS = ProgressReporter.getDefault();
     static final int MAX_ASM_VERSION = Opcodes.ASM9;
     private static final String MANIFEST_NAME = "META-INF/MANIFEST.MF";
     private final List<File> libraries;
@@ -71,6 +76,14 @@ class RenamerImpl implements Renamer {
         if (!this.setup)
             this.setup();
 
+        if (Boolean.getBoolean(ProgressReporter.ENABLED_PROPERTY)) {
+            try {
+                PROGRESS.setMaxProgress(JarUtils.getFileCountInZip(input));
+            } catch (IOException e) {
+                logger.accept("Failed to read zip file count: " + e);
+            }
+        }
+
         input = Objects.requireNonNull(input).getAbsoluteFile();
         output = Objects.requireNonNull(output).getAbsoluteFile();
 
@@ -78,10 +91,13 @@ class RenamerImpl implements Renamer {
             throw new IllegalArgumentException("Input file not found: " + input.getAbsolutePath());
 
         logger.accept("Reading Input: " + input.getAbsolutePath());
+        PROGRESS.setStep("Reading input jar");
         // Read everything from the input jar!
         List<Entry> oldEntries = new ArrayList<>();
         try (ZipFile in = new ZipFile(input)) {
-            Util.forZip(in, e -> {
+            int amount = 0;
+            for (Enumeration<? extends ZipEntry> entries = in.entries(); entries.hasMoreElements();) {
+                final ZipEntry e = entries.nextElement();
                 if (e.isDirectory())
                     return;
                 String name = e.getName();
@@ -95,7 +111,11 @@ class RenamerImpl implements Renamer {
                     oldEntries.add(Transformer.JavadoctorEntry.create(e.getTime(), data));
                 else
                     oldEntries.add(ResourceEntry.create(name, e.getTime(), data));
-            });
+
+                if ((++amount) % 10 == 0) {
+                    PROGRESS.setProgress(amount);
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException("Could not parse input: " + input.getAbsolutePath(), e);
         }
@@ -115,6 +135,10 @@ class RenamerImpl implements Renamer {
                 e -> new Pair<>(e.getName(), HashFunction.SHA256.hash(e.getData()))
             ).stream().collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
             */
+
+            PROGRESS.setProgress(0);
+            PROGRESS.setIndeterminate(true);
+            PROGRESS.setStep("Processing entries");
 
             List<ClassEntry> ourClasses = oldEntries.stream()
                 .filter(e -> e instanceof ClassEntry && !e.getName().startsWith("META-INF/"))
@@ -159,10 +183,15 @@ class RenamerImpl implements Renamer {
                 output.getParentFile().mkdirs();
 
             seen.clear();
+
+            PROGRESS.setMaxProgress(newEntries.size());
+            PROGRESS.setStep("Writing output");
+
             logger.accept("Writing Output: " + output.getAbsolutePath());
             try (FileOutputStream fos = new FileOutputStream(output);
                 ZipOutputStream zos = new ZipOutputStream(fos)) {
 
+                int amount = 0;
                 for (Entry e : newEntries) {
                     String name = e.getName();
                     int idx = name.lastIndexOf('/');
@@ -175,7 +204,13 @@ class RenamerImpl implements Renamer {
                     zos.putNextEntry(entry);
                     zos.write(e.getData());
                     zos.closeEntry();
+
+                    if ((++amount) % 10 == 0) {
+                        PROGRESS.setProgress(amount);
+                    }
                 }
+
+                PROGRESS.setProgress(amount);
             } catch (IOException e) {
                 throw new RuntimeException("Could not write output to file: " + output.getAbsolutePath(), e);
             }
