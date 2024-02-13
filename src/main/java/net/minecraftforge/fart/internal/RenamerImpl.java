@@ -99,7 +99,7 @@ class RenamerImpl implements Renamer {
             for (Enumeration<? extends ZipEntry> entries = in.entries(); entries.hasMoreElements();) {
                 final ZipEntry e = entries.nextElement();
                 if (e.isDirectory())
-                    return;
+                    continue;
                 String name = e.getName();
                 byte[] data = Util.toByteArray(in.getInputStream(e));
 
