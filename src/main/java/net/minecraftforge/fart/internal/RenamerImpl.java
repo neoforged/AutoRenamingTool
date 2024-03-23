@@ -104,7 +104,7 @@ class RenamerImpl implements Renamer {
                 if (e.isDirectory())
                     continue;
                 String name = e.getName();
-                byte[] data = Util.toByteArray(new BufferedInputStream(in.getInputStream(e)));
+                byte[] data = Util.toByteArray(in.getInputStream(e), Math.toIntExact(e.getSize()));
 
                 if (name.endsWith(".class"))
                     oldEntries.add(ClassEntry.create(name, e.getTime(), data));
