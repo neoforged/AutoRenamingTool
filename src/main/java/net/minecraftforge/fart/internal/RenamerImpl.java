@@ -5,9 +5,12 @@
 
 package net.minecraftforge.fart.internal;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -101,7 +104,7 @@ class RenamerImpl implements Renamer {
                 if (e.isDirectory())
                     continue;
                 String name = e.getName();
-                byte[] data = Util.toByteArray(in.getInputStream(e));
+                byte[] data = Util.toByteArray(new BufferedInputStream(in.getInputStream(e)));
 
                 if (name.endsWith(".class"))
                     oldEntries.add(ClassEntry.create(name, e.getTime(), data));
@@ -158,7 +161,7 @@ class RenamerImpl implements Renamer {
             List<Entry> newEntries = async.invokeAll(oldEntries, Entry::getName, this::processEntry);
 
             logger.accept("Adding extras");
-            transformers.stream().forEach(t -> newEntries.addAll(t.getExtras()));
+            transformers.forEach(t -> newEntries.addAll(t.getExtras()));
 
             Set<String> seen = new HashSet<>();
             String dupes = newEntries.stream().map(Entry::getName)
@@ -188,8 +191,8 @@ class RenamerImpl implements Renamer {
             PROGRESS.setStep("Writing output");
 
             logger.accept("Writing Output: " + output.getAbsolutePath());
-            try (FileOutputStream fos = new FileOutputStream(output);
-                ZipOutputStream zos = new ZipOutputStream(fos)) {
+            try (OutputStream fos = new BufferedOutputStream(Files.newOutputStream(output.toPath()));
+                 ZipOutputStream zos = new ZipOutputStream(fos)) {
 
                 int amount = 0;
                 for (Entry e : newEntries) {
