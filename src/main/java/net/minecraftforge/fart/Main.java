@@ -175,7 +175,7 @@ public class Main {
             }
         }
 
-        return ret.toArray(new String[ret.size()]);
+        return ret.toArray(new String[0]);
     }
 
     private static String getVersion() {

@@ -97,9 +97,8 @@ class EnhancedRemapper extends Remapper {
 
     @Override
     public Object mapValue(final Object value) {
-        if (value instanceof Handle) {
+        if (value instanceof Handle handle) {
             // Backport of ASM!327 https://gitlab.ow2.org/asm/asm/-/merge_requests/327
-            final Handle handle = (Handle) value;
             final boolean isFieldHandle = handle.getTag() <= Opcodes.H_PUTSTATIC;
 
             return new Handle(
@@ -410,7 +409,7 @@ class EnhancedRemapper extends Remapper {
                             tmp.add(name);
                     }
 
-                    this.params = tmp.toArray(new String[tmp.size()]);
+                    this.params = tmp.toArray(new String[0]);
                 } else {
                     this.params = null;
                 }

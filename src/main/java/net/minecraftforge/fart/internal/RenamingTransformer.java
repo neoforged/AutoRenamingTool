@@ -90,6 +90,6 @@ public class RenamingTransformer implements Transformer {
     }
 
     void storeNames(String className, String methodName, String methodDescriptor, Collection<String> paramNames) {
-        abstractParams.add(className + ' ' + methodName + ' ' + methodDescriptor + ' ' + paramNames.stream().collect(Collectors.joining(" ")));
+        abstractParams.add(className + ' ' + methodName + ' ' + methodDescriptor + ' ' + String.join(" ", paramNames));
     }
 }

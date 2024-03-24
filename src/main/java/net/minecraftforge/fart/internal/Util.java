@@ -5,43 +5,7 @@
 
 package net.minecraftforge.fart.internal;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
 class Util {
-    public static void forZip(ZipFile zip, IOConsumer<ZipEntry> consumer) throws IOException {
-        for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements();) {
-            consumer.accept(entries.nextElement());
-        }
-    }
-
-    @FunctionalInterface
-    public static interface IOConsumer<T> {
-        public void accept(T value) throws IOException;
-    }
-
-    public static byte[] toByteArray(InputStream input) throws IOException {
-        return toByteArray(input, -1);
-    }
-
-    public static byte[] toByteArray(InputStream input, int initialStreamSize) throws IOException {
-        ByteArrayOutputStream output = initialStreamSize > 0 ? new ByteArrayOutputStream(initialStreamSize) : new ByteArrayOutputStream();
-        copy(input, output);
-        return output.toByteArray();
-    }
-
-    public static void copy(InputStream input, OutputStream output) throws IOException {
-        byte[] buf = new byte[2048];
-        int cnt = 0;
-        while ((cnt = input.read(buf, 0, buf.length)) != -1) {
-            output.write(buf, 0, cnt);
-        }
-    }
 
     public static String nameToBytecode(Class<?> cls) {
         return cls == null ? null : cls.getName().replace('.', '/');

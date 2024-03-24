@@ -130,8 +130,7 @@ class ClassProviderImpl implements ClassProvider {
             this.name = Util.nameToBytecode(node);
             this.access = new Access(node.getModifiers());
             this.superName = Util.nameToBytecode(node.getSuperclass());
-            this.interfaces = Collections.unmodifiableList(Arrays.stream(node.getInterfaces())
-                .map(c -> Util.nameToBytecode(c)).collect(Collectors.toList()));
+            this.interfaces = Arrays.stream(node.getInterfaces()).map(Util::nameToBytecode).toList();
 
             Map<String, MethodInfo> mtds = Stream.concat(
                 Arrays.stream(node.getConstructors()).map(MethodInfo::new),
@@ -142,7 +141,7 @@ class ClassProviderImpl implements ClassProvider {
 
             Field[] flds = node.getDeclaredFields();
             if (flds != null && flds.length > 0) {
-                this.fields = Collections.unmodifiableMap(Arrays.asList(flds).stream().map(FieldInfo::new)
+                this.fields = Collections.unmodifiableMap(Arrays.stream(flds).map(FieldInfo::new)
                     .collect(Collectors.toMap(FieldInfo::getName, Function.identity())));
             } else
                 this.fields = null;
@@ -346,7 +345,7 @@ class ClassProviderImpl implements ClassProvider {
                 if (ret.isEmpty())
                     toString = "default";
                 else
-                    toString = ret.stream().collect(Collectors.joining(" "));
+                    toString = String.join(" ", ret);
             }
             return toString;
         }

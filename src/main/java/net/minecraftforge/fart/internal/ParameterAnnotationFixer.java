@@ -148,17 +148,6 @@ public final class ParameterAnnotationFixer extends OptionalChangeTransformer {
         }
     }
 
-    private static class AnnotationHolder {
-        final int parameter;
-        final String descriptor;
-        final boolean visible;
-        final AnnotationNode node;
-
-        AnnotationHolder(int parameter, String descriptor, boolean visible, AnnotationNode node) {
-            this.parameter = parameter;
-            this.descriptor = descriptor;
-            this.visible = visible;
-            this.node = node;
-        }
+    private record AnnotationHolder(int parameter, String descriptor, boolean visible, AnnotationNode node) {
     }
 }
