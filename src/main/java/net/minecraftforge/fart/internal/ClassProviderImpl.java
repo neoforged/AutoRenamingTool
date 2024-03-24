@@ -5,6 +5,7 @@
 
 package net.minecraftforge.fart.internal;
 
+import java.io.InputStream;
 import net.minecraftforge.fart.api.ClassProvider;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
@@ -67,16 +68,17 @@ class ClassProviderImpl implements ClassProvider {
     }
 
     private Optional<? extends IClassInfo> computeClassInfo(String name) {
-        if (this.classInfos.containsKey(name))
-            return this.classInfos.get(name);
+        Optional<? extends IClassInfo> knownClassInfo = this.classInfos.get(name);
+        if (knownClassInfo != null)
+            return knownClassInfo;
 
         Path source = this.sources.get(name);
 
         if (source == null)
             return Optional.empty();
 
-        try {
-            byte[] data = Util.toByteArray(Files.newInputStream(source));
+        try (InputStream in = Files.newInputStream(source)) {
+            byte[] data = in.readAllBytes();
             return Optional.of(new ClassInfo(data));
         } catch (IOException e) {
             throw new RuntimeException("Could not get data to compute class info in file: " + source.toAbsolutePath(), e);

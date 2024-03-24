@@ -72,7 +72,7 @@ enum HashFunction {
     }
 
     public String hash(InputStream stream) throws IOException {
-        return hash(Util.toByteArray(stream));
+        return hash(stream.readAllBytes());
     }
 
     public String hash(byte[] data) {

@@ -5,7 +5,6 @@
 
 package net.minecraftforge.fart.internal;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -104,7 +103,7 @@ class RenamerImpl implements Renamer {
                 if (e.isDirectory())
                     continue;
                 String name = e.getName();
-                byte[] data = Util.toByteArray(in.getInputStream(e), Math.toIntExact(e.getSize()));
+                byte[] data = in.getInputStream(e).readAllBytes();
 
                 if (name.endsWith(".class"))
                     oldEntries.add(ClassEntry.create(name, e.getTime(), data));
