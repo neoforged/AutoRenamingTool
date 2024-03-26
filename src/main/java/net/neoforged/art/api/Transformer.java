@@ -87,19 +87,6 @@ public interface Transformer {
     }
 
     /**
-     * Create a transformer that applies mappings as a transformation.
-     *
-     * @param map the mapping information to remap with
-     * @return a factory for a renaming transformer
-     *
-     * @deprecated use {@link #renamerFactory(IMappingFile, boolean)} insteead
-     */
-    @Deprecated
-    static Factory renamerFactory(IMappingFile map) {
-        return renamerFactory(map, true);
-    }
-
-    /**
      * Create a transformer that renames any local variables that are not valid java identifiers.
      *
      * @param config option for which local variables to rename
