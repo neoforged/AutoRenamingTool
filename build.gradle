@@ -55,6 +55,7 @@ test {
 }
 
 license {
+    skipExistingHeaders = true
     header = file('LICENSE-header.txt')
     ext.project = TITLE
 }
