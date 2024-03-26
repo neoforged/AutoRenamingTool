@@ -58,7 +58,7 @@ public class RecordFixer extends OptionalChangeTransformer {
                 }
                 // Manually add the record component back if this class doesn't have any
                 if (components == null)
-                    components = new LinkedHashMap<>();
+                    components = new LinkedHashMap<String, Entry>();
                 components.put(name + descriptor, new Entry(name, descriptor, signature));
             }
             return super.visitField(access, name, descriptor, signature, value);
@@ -74,11 +74,19 @@ public class RecordFixer extends OptionalChangeTransformer {
             }
         }
 
-        private record Entry(String name, String descriptor, String signature) {
+        private static class Entry {
+            private final String name;
+            private final String descriptor;
+            private final String signature;
+            private Entry(String name, String descriptor, String signature) {
+                this.name = name;
+                this.descriptor = descriptor;
+                this.signature = signature;
+            }
 
             @Override
             public String toString() {
-                return "[Name: " + name + ", Desc: " + descriptor + ", Sig: " + signature + "]";
+                return "[Name: " + name  + ", Desc: "  + descriptor + ", Sig: " + signature + "]";
             }
         }
     }

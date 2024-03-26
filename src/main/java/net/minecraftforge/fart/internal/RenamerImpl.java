@@ -172,7 +172,7 @@ class RenamerImpl implements Renamer {
 
             // We care about stable output, so sort, and single thread write.
             logger.accept("Sorting");
-            newEntries.sort(this::compare);
+            Collections.sort(newEntries, this::compare);
 
             if (!output.getParentFile().exists())
                 output.getParentFile().mkdirs();

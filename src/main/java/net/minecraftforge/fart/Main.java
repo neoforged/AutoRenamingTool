@@ -179,7 +179,7 @@ public class Main {
             }
         }
 
-        return ret.toArray(new String[0]);
+        return ret.toArray(new String[ret.size()]);
     }
 
     private static String getVersion() {

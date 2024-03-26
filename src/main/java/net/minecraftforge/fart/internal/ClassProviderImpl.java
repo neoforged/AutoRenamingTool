@@ -139,7 +139,7 @@ class ClassProviderImpl implements ClassProvider {
 
             Field[] flds = node.getDeclaredFields();
             if (flds.length > 0) {
-                this.fields = Collections.unmodifiableMap(Arrays.stream(flds).map(FieldInfo::new)
+                this.fields = Collections.unmodifiableMap(Arrays.asList(flds).stream().map(FieldInfo::new)
                     .collect(Collectors.toMap(FieldInfo::getName, Function.identity())));
             } else
                 this.fields = null;
@@ -347,7 +347,7 @@ class ClassProviderImpl implements ClassProvider {
                 if (ret.isEmpty())
                     toString = "default";
                 else
-                    toString = String.join(" ", ret);
+                    toString = ret.stream().collect(Collectors.joining(" "));
             }
             return toString;
         }

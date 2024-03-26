@@ -154,18 +154,19 @@ public class JavadoctorRemapper {
     }
 
     static String getJavadocType(Type type) {
-        return switch (type.getSort()) {
-            case BOOLEAN -> "boolean";
-            case INT -> "int";
-            case LONG -> "long";
-            case DOUBLE -> "double";
-            case FLOAT -> "float";
-            case CHAR -> "char";
-            case SHORT -> "short";
-            case BYTE -> "byte";
-            case OBJECT -> type.getInternalName().replace('/', '.');
-            case ARRAY -> getJavadocType(type.getElementType()) + "[]";
-            default -> throw new UnsupportedOperationException("Unknown type in javadoc: " + type.getSort());
-        };
+        switch (type.getSort()) {
+            case BOOLEAN: return "boolean";
+            case INT: return "int";
+            case LONG: return "long";
+            case DOUBLE: return "double";
+            case FLOAT: return "float";
+            case CHAR: return "char";
+            case SHORT: return "short";
+            case BYTE: return "byte";
+            case OBJECT: return type.getInternalName().replace('/', '.');
+            case ARRAY: return getJavadocType(type.getElementType()) + "[]";
+            default:
+                throw new UnsupportedOperationException("Unknown type in javadoc: " + type.getSort());
+        }
     }
 }
