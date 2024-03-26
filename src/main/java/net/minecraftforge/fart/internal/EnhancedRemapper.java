@@ -14,20 +14,20 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
+import net.minecraftforge.fart.api.ClassProvider;
+import net.minecraftforge.fart.api.ClassProvider.IClassInfo;
+import net.minecraftforge.fart.api.ClassProvider.IFieldInfo;
+import net.minecraftforge.fart.api.ClassProvider.IMethodInfo;
+import net.neoforged.srgutils.IMappingFile;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Remapper;
 
-import net.minecraftforge.fart.api.ClassProvider;
-import net.minecraftforge.fart.api.ClassProvider.IClassInfo;
-import net.minecraftforge.fart.api.ClassProvider.IFieldInfo;
-import net.minecraftforge.fart.api.ClassProvider.IMethodInfo;
-import net.minecraftforge.srgutils.IMappingFile;
-
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
+import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
 
 class EnhancedRemapper extends Remapper {
     private final ClassProvider classProvider;

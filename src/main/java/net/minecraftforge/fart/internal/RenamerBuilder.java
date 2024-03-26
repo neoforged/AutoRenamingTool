@@ -10,12 +10,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
 import net.minecraftforge.fart.api.ClassProvider;
 import net.minecraftforge.fart.api.Renamer;
 import net.minecraftforge.fart.api.Renamer.Builder;
 import net.minecraftforge.fart.api.Transformer;
-import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.srgutils.IMappingFile;
 
 import static java.util.Objects.requireNonNull;
 

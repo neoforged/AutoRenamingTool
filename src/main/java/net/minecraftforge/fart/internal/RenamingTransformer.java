@@ -5,6 +5,7 @@
 
 package net.minecraftforge.fart.internal;
 
+import com.google.gson.JsonObject;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,19 +15,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import com.google.gson.JsonObject;
+import net.minecraftforge.fart.api.ClassProvider;
+import net.minecraftforge.fart.api.Transformer;
 import net.neoforged.javadoctor.io.gson.GsonJDocIO;
 import net.neoforged.javadoctor.spec.ClassJavadoc;
 import net.neoforged.javadoctor.spec.DocReferences;
 import net.neoforged.javadoctor.spec.JavadoctorInformation;
+import net.neoforged.srgutils.IMappingFile;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
-
-import net.minecraftforge.fart.api.ClassProvider;
-import net.minecraftforge.fart.api.Transformer;
-import net.minecraftforge.srgutils.IMappingFile;
 
 public class RenamingTransformer implements Transformer {
     private static final String ABSTRACT_FILE = "fernflower_abstract_parameter_names.txt";
