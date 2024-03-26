@@ -6,9 +6,9 @@
 package net.minecraftforge.fart;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -16,17 +16,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import net.minecraftforge.fart.api.IdentifierFixerConfig;
-import net.minecraftforge.fart.api.Renamer;
-import net.minecraftforge.fart.api.SignatureStripperConfig;
-import net.minecraftforge.fart.api.SourceFixerConfig;
-import net.minecraftforge.fart.api.Transformer;
-import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.art.api.IdentifierFixerConfig;
+import net.neoforged.art.api.Renamer;
+import net.neoforged.art.api.SignatureStripperConfig;
+import net.neoforged.art.api.SourceFixerConfig;
+import net.neoforged.art.api.Transformer;
+import net.neoforged.srgutils.IMappingFile;
 
 public class Main {
     public static void main(String[] args) throws IOException {

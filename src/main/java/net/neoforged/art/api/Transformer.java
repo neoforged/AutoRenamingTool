@@ -3,23 +3,22 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.api;
+package net.neoforged.art.api;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
-
-import net.minecraftforge.fart.internal.FFLineFixer;
-import net.minecraftforge.fart.internal.IdentifierFixer;
-import net.minecraftforge.fart.internal.ParameterAnnotationFixer;
-import net.minecraftforge.fart.internal.EntryImpl;
-import net.minecraftforge.fart.internal.RecordFixer;
-import net.minecraftforge.fart.internal.RenamingTransformer;
-import net.minecraftforge.fart.internal.SignatureStripperTransformer;
-import net.minecraftforge.fart.internal.SourceFixer;
-import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.art.internal.EntryImpl;
+import net.neoforged.art.internal.FFLineFixer;
+import net.neoforged.art.internal.IdentifierFixer;
+import net.neoforged.art.internal.ParameterAnnotationFixer;
+import net.neoforged.art.internal.RecordFixer;
+import net.neoforged.art.internal.RenamingTransformer;
+import net.neoforged.art.internal.SignatureStripperTransformer;
+import net.neoforged.art.internal.SourceFixer;
+import net.neoforged.srgutils.IMappingFile;
 import org.objectweb.asm.Type;
 
 import static java.util.Objects.requireNonNull;
@@ -85,19 +84,6 @@ public interface Transformer {
      */
     static Factory renamerFactory(IMappingFile map, boolean collectAbstractParams) {
         return ctx -> new RenamingTransformer(ctx.getClassProvider(), map, ctx.getLog(), collectAbstractParams);
-    }
-
-    /**
-     * Create a transformer that applies mappings as a transformation.
-     *
-     * @param map the mapping information to remap with
-     * @return a factory for a renaming transformer
-     *
-     * @deprecated use {@link #renamerFactory(IMappingFile, boolean)} insteead
-     */
-    @Deprecated
-    static Factory renamerFactory(IMappingFile map) {
-        return renamerFactory(map, true);
     }
 
     /**

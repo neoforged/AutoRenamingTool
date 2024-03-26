@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import net.minecraftforge.fart.api.IdentifierFixerConfig;
+import net.neoforged.art.api.IdentifierFixerConfig;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;

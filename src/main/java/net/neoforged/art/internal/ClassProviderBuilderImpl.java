@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import net.minecraftforge.fart.api.ClassProvider;
+import net.neoforged.art.api.ClassProvider;
 
 public class ClassProviderBuilderImpl implements ClassProvider.Builder {
     private final List<FileSystem> fileSystems = new ArrayList<>();

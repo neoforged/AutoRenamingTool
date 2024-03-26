@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
 import net.neoforged.javadoctor.spec.ClassJavadoc;
 import net.neoforged.javadoctor.spec.DocReferences;

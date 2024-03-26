@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.api;
+package net.neoforged.art.api;
 
-import net.minecraftforge.fart.internal.ClassLoaderClassProvider;
-import net.minecraftforge.fart.internal.ClassProviderBuilderImpl;
+import net.neoforged.art.internal.ClassLoaderClassProvider;
+import net.neoforged.art.internal.ClassProviderBuilderImpl;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
