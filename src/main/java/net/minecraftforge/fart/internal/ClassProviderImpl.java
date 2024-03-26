@@ -128,7 +128,7 @@ class ClassProviderImpl implements ClassProvider {
             this.name = nameToBytecode(node);
             this.access = new Access(node.getModifiers());
             this.superName = nameToBytecode(node.getSuperclass());
-            this.interfaces = Arrays.stream(node.getInterfaces()).map(ClassInfo::nameToBytecode).toList();
+            this.interfaces = Arrays.stream(node.getInterfaces()).map(ClassInfo::nameToBytecode).collect(Collectors.toList());
 
             Map<String, MethodInfo> mtds = Stream.concat(
                 Arrays.stream(node.getConstructors()).map(MethodInfo::new),

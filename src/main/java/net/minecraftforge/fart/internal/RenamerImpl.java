@@ -6,8 +6,10 @@
 package net.minecraftforge.fart.internal;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -103,7 +105,7 @@ class RenamerImpl implements Renamer {
                 if (e.isDirectory())
                     continue;
                 String name = e.getName();
-                byte[] data = in.getInputStream(e).readAllBytes();
+                byte[] data = readAllBytes(in.getInputStream(e), e.getSize());
 
                 if (name.endsWith(".class"))
                     oldEntries.add(ClassEntry.create(name, e.getTime(), data));
@@ -212,6 +214,19 @@ class RenamerImpl implements Renamer {
         } finally {
             async.shutdown();
         }
+    }
+
+    private byte[] readAllBytes(InputStream in, long size) throws IOException {
+        // This program w ill crash if size exceeds MAX_INT anyway since arrays are limited to 32-bit indices
+        ByteArrayOutputStream tmp = new ByteArrayOutputStream(size >= 0 ? (int) size : 0);
+
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            tmp.write(buffer, 0, read);
+        }
+
+        return tmp.toByteArray();
     }
 
     // Tho Directory entries are not strictly necessary, we add them because some bad implementations of Zip extractors

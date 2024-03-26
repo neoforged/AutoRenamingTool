@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Handle;
@@ -71,8 +72,8 @@ class EnhancedRemapper extends Remapper {
     }
 
     private Optional<MClass.MMethod> findMethod(final String owner, final String name, final int paramCount) {
-        return getClass(owner).stream()
-                .flatMap(c -> c.getMethods().stream().flatMap(Optional::stream))
+        return stream(getClass(owner))
+                .flatMap(c -> c.getMethods().stream().flatMap(EnhancedRemapper::stream))
                 .filter(m -> m.getName().equals(name) && Type.getMethodType(m.getDescriptor()).getArgumentTypes().length == paramCount)
                 .findFirst();
     }
@@ -141,9 +142,13 @@ class EnhancedRemapper extends Remapper {
     private Optional<MClass> computeClass(String cls) {
         Optional<? extends IClassInfo> icls = this.getClassProvider().getClass(cls);
         IMappingFile.IClass mcls = this.map.getClass(cls);
-        if (icls.isEmpty() && mcls == null)
+        if (!icls.isPresent() && mcls == null)
             return Optional.empty();
         return Optional.of(new MClass(icls.orElse(null), mcls));
+    }
+
+    private static <T> Stream<T> stream(Optional<T> optional) {
+        return optional.isPresent() ? Stream.of(optional.get()) : Stream.empty();
     }
 
     private class MClass {
@@ -183,12 +188,12 @@ class EnhancedRemapper extends Remapper {
 
             for (MClass parentCls : parents) {
                 for (Optional<MField> fldOpt : parentCls.getFields()) {
-                    if (fldOpt.isEmpty())
+                    if (!fldOpt.isPresent())
                         continue;
 
                     MField fld = fldOpt.get();
                     Optional<MField> existing = this.fields.get(fld.getKey());
-                    if (existing == null || existing.isEmpty()) {
+                    if (existing == null || !existing.isPresent()) {
                         /* There are some weird cases where a field will be referenced as if it were owned by the current class,
                          * but it needs a field from the parent. So lets follow the linking spec and pull
                          * down fields from parents.
@@ -208,7 +213,7 @@ class EnhancedRemapper extends Remapper {
                 }
 
                 for (Optional<MMethod> mtdOpt : parentCls.getMethods()) {
-                    if (mtdOpt.isEmpty())
+                    if (!mtdOpt.isPresent())
                         continue;
 
                     MMethod mtd = mtdOpt.get();
@@ -241,7 +246,7 @@ class EnhancedRemapper extends Remapper {
 
 
                     Optional<MMethod> existingOpt = this.methods.get(mtd.getKey());
-                    if (existingOpt == null || existingOpt.isEmpty()) {
+                    if (existingOpt == null || !existingOpt.isPresent()) {
                         /* If there is none existing, then we pull in what we have found from the parents.
                          * This intentionally uses the same object as the parents so that if we have weird edge
                          * cases, we can migrate the mapping transitively.
