@@ -105,7 +105,10 @@ class RenamerImpl implements Renamer {
                 if (e.isDirectory())
                     continue;
                 String name = e.getName();
-                byte[] data = readAllBytes(in.getInputStream(e), e.getSize());
+                byte[] data;
+                try (InputStream entryInput = in.getInputStream(e)) {
+                    data = readAllBytes(entryInput, e.getSize());
+                }
 
                 if (name.endsWith(".class"))
                     oldEntries.add(ClassEntry.create(name, e.getTime(), data));
@@ -217,7 +220,7 @@ class RenamerImpl implements Renamer {
     }
 
     private byte[] readAllBytes(InputStream in, long size) throws IOException {
-        // This program w ill crash if size exceeds MAX_INT anyway since arrays are limited to 32-bit indices
+        // This program will crash if size exceeds MAX_INT anyway since arrays are limited to 32-bit indices
         ByteArrayOutputStream tmp = new ByteArrayOutputStream(size >= 0 ? (int) size : 0);
 
         byte[] buffer = new byte[8192];
