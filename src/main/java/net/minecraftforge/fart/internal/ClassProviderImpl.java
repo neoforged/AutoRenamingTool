@@ -5,7 +5,6 @@
 
 package net.minecraftforge.fart.internal;
 
-import java.io.InputStream;
 import net.minecraftforge.fart.api.ClassProvider;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
@@ -77,9 +76,8 @@ class ClassProviderImpl implements ClassProvider {
         if (source == null)
             return Optional.empty();
 
-        try (InputStream in = Files.newInputStream(source)) {
-            byte[] data = in.readAllBytes();
-            return Optional.of(new ClassInfo(data));
+        try {
+            return Optional.of(new ClassInfo(Files.readAllBytes(source)));
         } catch (IOException e) {
             throw new RuntimeException("Could not get data to compute class info in file: " + source.toAbsolutePath(), e);
         }
@@ -127,10 +125,10 @@ class ClassProviderImpl implements ClassProvider {
         }
 
         ClassInfo(Class<?> node) {
-            this.name = Util.nameToBytecode(node);
+            this.name = nameToBytecode(node);
             this.access = new Access(node.getModifiers());
-            this.superName = Util.nameToBytecode(node.getSuperclass());
-            this.interfaces = Arrays.stream(node.getInterfaces()).map(Util::nameToBytecode).toList();
+            this.superName = nameToBytecode(node.getSuperclass());
+            this.interfaces = Arrays.stream(node.getInterfaces()).map(ClassInfo::nameToBytecode).toList();
 
             Map<String, MethodInfo> mtds = Stream.concat(
                 Arrays.stream(node.getConstructors()).map(MethodInfo::new),
@@ -140,11 +138,15 @@ class ClassProviderImpl implements ClassProvider {
             this.methods = mtds.isEmpty() ? null : Collections.unmodifiableMap(mtds);
 
             Field[] flds = node.getDeclaredFields();
-            if (flds != null && flds.length > 0) {
+            if (flds.length > 0) {
                 this.fields = Collections.unmodifiableMap(Arrays.stream(flds).map(FieldInfo::new)
                     .collect(Collectors.toMap(FieldInfo::getName, Function.identity())));
             } else
                 this.fields = null;
+        }
+
+        private static String nameToBytecode(Class<?> cls) {
+            return cls == null ? null : cls.getName().replace('.', '/');
         }
 
         @Override
@@ -290,8 +292,8 @@ class ClassProviderImpl implements ClassProvider {
     }
 
     private static class Access {
-        private static int[] ACC = new int[23];
-        private static String[] NAME = new String[23];
+        private static final int[] ACC = new int[23];
+        private static final String[] NAME = new String[23];
         static {
             int idx = 0;
             put(idx++, ACC_PUBLIC,      "public");

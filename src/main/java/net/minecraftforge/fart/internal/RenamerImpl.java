@@ -170,13 +170,6 @@ class RenamerImpl implements Renamer {
             if (!dupes.isEmpty())
                 throw new IllegalStateException("Duplicate entries detected: " + dupes);
 
-            /*
-            log("Collecting new hashes");
-            Map<String, String> newHashes = async.invokeAll(newEntries,
-                e -> new Pair<>(e.getName(), HashFunction.SHA256.hash(e.getData()))
-            ).stream().collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-            */
-
             // We care about stable output, so sort, and single thread write.
             logger.accept("Sorting");
             newEntries.sort(this::compare);

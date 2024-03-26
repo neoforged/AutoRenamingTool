@@ -113,7 +113,7 @@ public class JavadoctorRemapper {
     }
 
     private String replaceLinks(String containedClass, Matcher matcher, Function<Matcher, String> prefix) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         while (matcher.find()) {
             final String matchedOwner = matcher.group("owner");
             final String owner = references.getInternalName((matchedOwner == null || matchedOwner.isEmpty()) ? containedClass : matchedOwner);

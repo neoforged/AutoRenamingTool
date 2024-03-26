@@ -167,9 +167,13 @@ public class Main {
                 if (x + 1 == args.length)
                     throw new IllegalArgumentException("No value specified for '--cfg'");
 
-                Files.lines(Paths.get(args[++x])).forEach(ret::add);
+                try (var lines = Files.lines(Paths.get(args[++x]))) {
+                    lines.forEach(ret::add);
+                }
             } else if (args[x].startsWith("--cfg=")) {
-                Files.lines(Paths.get(args[x].substring(6))).forEach(ret::add);
+                try (var lines = Files.lines(Paths.get(args[x].substring(6)))) {
+                    lines.forEach(ret::add);
+                }
             } else {
                 ret.add(args[x]);
             }

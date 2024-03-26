@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Handle;
@@ -72,8 +71,8 @@ class EnhancedRemapper extends Remapper {
     }
 
     private Optional<MClass.MMethod> findMethod(final String owner, final String name, final int paramCount) {
-        return stream(getClass(owner))
-                .flatMap(c -> c.getMethods().stream().flatMap(EnhancedRemapper::stream))
+        return getClass(owner).stream()
+                .flatMap(c -> c.getMethods().stream().flatMap(Optional::stream))
                 .filter(m -> m.getName().equals(name) && Type.getMethodType(m.getDescriptor()).getArgumentTypes().length == paramCount)
                 .findFirst();
     }
@@ -141,13 +140,9 @@ class EnhancedRemapper extends Remapper {
     private Optional<MClass> computeClass(String cls) {
         Optional<? extends IClassInfo> icls = this.getClassProvider().getClass(cls);
         IMappingFile.IClass mcls = this.map.getClass(cls);
-        if (!icls.isPresent() && mcls == null)
+        if (icls.isEmpty() && mcls == null)
             return Optional.empty();
         return Optional.of(new MClass(icls.orElse(null), mcls));
-    }
-
-    private static <T> Stream<T> stream(Optional<T> optional) {
-        return optional.isPresent() ? Stream.of(optional.get()) : Stream.empty();
     }
 
     private class MClass {
@@ -156,9 +151,9 @@ class EnhancedRemapper extends Remapper {
         private final String mappedName;
         private final List<MClass> parents;
         private final Map<String, Optional<MField>> fields = new ConcurrentHashMap<>();
-        private Collection<Optional<MField>> fieldsView = Collections.unmodifiableCollection(fields.values());
+        private final Collection<Optional<MField>> fieldsView = Collections.unmodifiableCollection(fields.values());
         private final Map<String, Optional<MMethod>> methods = new ConcurrentHashMap<>();
-        private Collection<Optional<MMethod>> methodsView = Collections.unmodifiableCollection(methods.values());
+        private final Collection<Optional<MMethod>> methodsView = Collections.unmodifiableCollection(methods.values());
 
         MClass(IClassInfo icls, IMappingFile.IClass mcls) {
             if (icls == null && mcls == null)
@@ -187,12 +182,12 @@ class EnhancedRemapper extends Remapper {
 
             for (MClass parentCls : parents) {
                 for (Optional<MField> fldOpt : parentCls.getFields()) {
-                    if (!fldOpt.isPresent())
+                    if (fldOpt.isEmpty())
                         continue;
 
                     MField fld = fldOpt.get();
                     Optional<MField> existing = this.fields.get(fld.getKey());
-                    if (existing == null || !existing.isPresent()) {
+                    if (existing == null || existing.isEmpty()) {
                         /* There are some weird cases where a field will be referenced as if it were owned by the current class,
                          * but it needs a field from the parent. So lets follow the linking spec and pull
                          * down fields from parents.
@@ -212,7 +207,7 @@ class EnhancedRemapper extends Remapper {
                 }
 
                 for (Optional<MMethod> mtdOpt : parentCls.getMethods()) {
-                    if (!mtdOpt.isPresent())
+                    if (mtdOpt.isEmpty())
                         continue;
 
                     MMethod mtd = mtdOpt.get();
@@ -245,7 +240,7 @@ class EnhancedRemapper extends Remapper {
 
 
                     Optional<MMethod> existingOpt = this.methods.get(mtd.getKey());
-                    if (existingOpt == null || !existingOpt.isPresent()) {
+                    if (existingOpt == null || existingOpt.isEmpty()) {
                         /* If there is none existing, then we pull in what we have found from the parents.
                          * This intentionally uses the same object as the parents so that if we have weird edge
                          * cases, we can migrate the mapping transitively.
