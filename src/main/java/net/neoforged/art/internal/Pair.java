@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
 class Pair<L, R> {
     private final L left;

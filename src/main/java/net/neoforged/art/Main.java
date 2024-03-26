@@ -20,11 +20,11 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import net.minecraftforge.fart.api.IdentifierFixerConfig;
-import net.minecraftforge.fart.api.Renamer;
-import net.minecraftforge.fart.api.SignatureStripperConfig;
-import net.minecraftforge.fart.api.SourceFixerConfig;
-import net.minecraftforge.fart.api.Transformer;
+import net.neoforged.art.api.IdentifierFixerConfig;
+import net.neoforged.art.api.Renamer;
+import net.neoforged.art.api.SignatureStripperConfig;
+import net.neoforged.art.api.SourceFixerConfig;
+import net.neoforged.art.api.Transformer;
 import net.neoforged.srgutils.IMappingFile;
 
 public class Main {

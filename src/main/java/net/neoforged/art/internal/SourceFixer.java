@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
-import net.minecraftforge.fart.api.SourceFixerConfig;
+import net.neoforged.art.api.SourceFixerConfig;
 import org.objectweb.asm.ClassVisitor;
 
 public final class SourceFixer extends OptionalChangeTransformer {

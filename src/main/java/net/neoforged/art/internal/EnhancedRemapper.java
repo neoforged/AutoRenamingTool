@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,10 +14,10 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import net.minecraftforge.fart.api.ClassProvider;
-import net.minecraftforge.fart.api.ClassProvider.IClassInfo;
-import net.minecraftforge.fart.api.ClassProvider.IFieldInfo;
-import net.minecraftforge.fart.api.ClassProvider.IMethodInfo;
+import net.neoforged.art.api.ClassProvider;
+import net.neoforged.art.api.ClassProvider.IClassInfo;
+import net.neoforged.art.api.ClassProvider.IFieldInfo;
+import net.neoforged.art.api.ClassProvider.IMethodInfo;
 import net.neoforged.srgutils.IMappingFile;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Handle;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
 import com.google.gson.JsonObject;
 import java.nio.charset.StandardCharsets;
@@ -15,8 +15,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import net.minecraftforge.fart.api.ClassProvider;
-import net.minecraftforge.fart.api.Transformer;
+import net.neoforged.art.api.ClassProvider;
+import net.neoforged.art.api.Transformer;
 import net.neoforged.javadoctor.io.gson.GsonJDocIO;
 import net.neoforged.javadoctor.spec.ClassJavadoc;
 import net.neoforged.javadoctor.spec.DocReferences;
