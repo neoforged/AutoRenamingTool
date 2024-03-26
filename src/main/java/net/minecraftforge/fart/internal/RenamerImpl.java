@@ -5,9 +5,13 @@
 
 package net.minecraftforge.fart.internal;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -101,7 +105,10 @@ class RenamerImpl implements Renamer {
                 if (e.isDirectory())
                     continue;
                 String name = e.getName();
-                byte[] data = Util.toByteArray(in.getInputStream(e));
+                byte[] data;
+                try (InputStream entryInput = in.getInputStream(e)) {
+                    data = readAllBytes(entryInput, e.getSize());
+                }
 
                 if (name.endsWith(".class"))
                     oldEntries.add(ClassEntry.create(name, e.getTime(), data));
@@ -158,7 +165,7 @@ class RenamerImpl implements Renamer {
             List<Entry> newEntries = async.invokeAll(oldEntries, Entry::getName, this::processEntry);
 
             logger.accept("Adding extras");
-            transformers.stream().forEach(t -> newEntries.addAll(t.getExtras()));
+            transformers.forEach(t -> newEntries.addAll(t.getExtras()));
 
             Set<String> seen = new HashSet<>();
             String dupes = newEntries.stream().map(Entry::getName)
@@ -167,13 +174,6 @@ class RenamerImpl implements Renamer {
                 .collect(Collectors.joining(", "));
             if (!dupes.isEmpty())
                 throw new IllegalStateException("Duplicate entries detected: " + dupes);
-
-            /*
-            log("Collecting new hashes");
-            Map<String, String> newHashes = async.invokeAll(newEntries,
-                e -> new Pair<>(e.getName(), HashFunction.SHA256.hash(e.getData()))
-            ).stream().collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-            */
 
             // We care about stable output, so sort, and single thread write.
             logger.accept("Sorting");
@@ -188,8 +188,8 @@ class RenamerImpl implements Renamer {
             PROGRESS.setStep("Writing output");
 
             logger.accept("Writing Output: " + output.getAbsolutePath());
-            try (FileOutputStream fos = new FileOutputStream(output);
-                ZipOutputStream zos = new ZipOutputStream(fos)) {
+            try (OutputStream fos = new BufferedOutputStream(Files.newOutputStream(output.toPath()));
+                 ZipOutputStream zos = new ZipOutputStream(fos)) {
 
                 int amount = 0;
                 for (Entry e : newEntries) {
@@ -217,6 +217,19 @@ class RenamerImpl implements Renamer {
         } finally {
             async.shutdown();
         }
+    }
+
+    private byte[] readAllBytes(InputStream in, long size) throws IOException {
+        // This program will crash if size exceeds MAX_INT anyway since arrays are limited to 32-bit indices
+        ByteArrayOutputStream tmp = new ByteArrayOutputStream(size >= 0 ? (int) size : 0);
+
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            tmp.write(buffer, 0, read);
+        }
+
+        return tmp.toByteArray();
     }
 
     // Tho Directory entries are not strictly necessary, we add them because some bad implementations of Zip extractors

@@ -157,9 +157,9 @@ class EnhancedRemapper extends Remapper {
         private final String mappedName;
         private final List<MClass> parents;
         private final Map<String, Optional<MField>> fields = new ConcurrentHashMap<>();
-        private Collection<Optional<MField>> fieldsView = Collections.unmodifiableCollection(fields.values());
+        private final Collection<Optional<MField>> fieldsView = Collections.unmodifiableCollection(fields.values());
         private final Map<String, Optional<MMethod>> methods = new ConcurrentHashMap<>();
-        private Collection<Optional<MMethod>> methodsView = Collections.unmodifiableCollection(methods.values());
+        private final Collection<Optional<MMethod>> methodsView = Collections.unmodifiableCollection(methods.values());
 
         MClass(IClassInfo icls, IMappingFile.IClass mcls) {
             if (icls == null && mcls == null)

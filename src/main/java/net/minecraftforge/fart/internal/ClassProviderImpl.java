@@ -67,8 +67,9 @@ class ClassProviderImpl implements ClassProvider {
     }
 
     private Optional<? extends IClassInfo> computeClassInfo(String name) {
-        if (this.classInfos.containsKey(name))
-            return this.classInfos.get(name);
+        Optional<? extends IClassInfo> knownClassInfo = this.classInfos.get(name);
+        if (knownClassInfo != null)
+            return knownClassInfo;
 
         Path source = this.sources.get(name);
 
@@ -76,8 +77,7 @@ class ClassProviderImpl implements ClassProvider {
             return Optional.empty();
 
         try {
-            byte[] data = Util.toByteArray(Files.newInputStream(source));
-            return Optional.of(new ClassInfo(data));
+            return Optional.of(new ClassInfo(Files.readAllBytes(source)));
         } catch (IOException e) {
             throw new RuntimeException("Could not get data to compute class info in file: " + source.toAbsolutePath(), e);
         }
@@ -125,11 +125,10 @@ class ClassProviderImpl implements ClassProvider {
         }
 
         ClassInfo(Class<?> node) {
-            this.name = Util.nameToBytecode(node);
+            this.name = nameToBytecode(node);
             this.access = new Access(node.getModifiers());
-            this.superName = Util.nameToBytecode(node.getSuperclass());
-            this.interfaces = Collections.unmodifiableList(Arrays.stream(node.getInterfaces())
-                .map(c -> Util.nameToBytecode(c)).collect(Collectors.toList()));
+            this.superName = nameToBytecode(node.getSuperclass());
+            this.interfaces = Arrays.stream(node.getInterfaces()).map(ClassInfo::nameToBytecode).collect(Collectors.toList());
 
             Map<String, MethodInfo> mtds = Stream.concat(
                 Arrays.stream(node.getConstructors()).map(MethodInfo::new),
@@ -139,11 +138,15 @@ class ClassProviderImpl implements ClassProvider {
             this.methods = mtds.isEmpty() ? null : Collections.unmodifiableMap(mtds);
 
             Field[] flds = node.getDeclaredFields();
-            if (flds != null && flds.length > 0) {
+            if (flds.length > 0) {
                 this.fields = Collections.unmodifiableMap(Arrays.asList(flds).stream().map(FieldInfo::new)
                     .collect(Collectors.toMap(FieldInfo::getName, Function.identity())));
             } else
                 this.fields = null;
+        }
+
+        private static String nameToBytecode(Class<?> cls) {
+            return cls == null ? null : cls.getName().replace('.', '/');
         }
 
         @Override
@@ -289,8 +292,8 @@ class ClassProviderImpl implements ClassProvider {
     }
 
     private static class Access {
-        private static int[] ACC = new int[23];
-        private static String[] NAME = new String[23];
+        private static final int[] ACC = new int[23];
+        private static final String[] NAME = new String[23];
         static {
             int idx = 0;
             put(idx++, ACC_PUBLIC,      "public");
