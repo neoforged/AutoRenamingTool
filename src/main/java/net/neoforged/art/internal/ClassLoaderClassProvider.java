@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
-import net.minecraftforge.fart.api.ClassProvider;
+import net.neoforged.art.api.ClassProvider;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;

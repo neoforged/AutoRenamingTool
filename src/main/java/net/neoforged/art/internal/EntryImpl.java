@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
-import net.minecraftforge.fart.api.Transformer;
+import net.neoforged.art.api.Transformer;
 
 public abstract class EntryImpl implements Transformer.Entry {
     private final String name;

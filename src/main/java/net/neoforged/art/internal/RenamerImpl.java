@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,18 +24,16 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-
+import net.neoforged.art.api.ClassProvider;
+import net.neoforged.art.api.Renamer;
+import net.neoforged.art.api.Transformer;
+import net.neoforged.art.api.Transformer.ClassEntry;
+import net.neoforged.art.api.Transformer.Entry;
+import net.neoforged.art.api.Transformer.ManifestEntry;
+import net.neoforged.art.api.Transformer.ResourceEntry;
 import net.neoforged.cliutils.JarUtils;
 import net.neoforged.cliutils.progress.ProgressReporter;
 import org.objectweb.asm.Opcodes;
-
-import net.minecraftforge.fart.api.ClassProvider;
-import net.minecraftforge.fart.api.Renamer;
-import net.minecraftforge.fart.api.Transformer;
-import net.minecraftforge.fart.api.Transformer.ClassEntry;
-import net.minecraftforge.fart.api.Transformer.Entry;
-import net.minecraftforge.fart.api.Transformer.ManifestEntry;
-import net.minecraftforge.fart.api.Transformer.ResourceEntry;
 
 class RenamerImpl implements Renamer {
     private static final ProgressReporter PROGRESS = ProgressReporter.getDefault();

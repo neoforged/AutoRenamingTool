@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.api;
+package net.neoforged.art.api;
 
 import java.io.Closeable;
 import java.io.File;
 import java.util.function.Consumer;
 
-import net.minecraftforge.fart.internal.RenamerBuilder;
+import net.neoforged.art.internal.RenamerBuilder;
 
 /**
  * A {@code Renamer} is used to run generic transformers on a JAR file.

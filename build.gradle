@@ -32,7 +32,7 @@ compileJava.options.encoding = 'UTF-8'
 ext {
     TITLE = 'Auto Renaming Tool'
     MANIFEST = manifest{
-        attributes('Main-Class': 'net.minecraftforge.fart.Main')
+        attributes('Main-Class': 'net.neoforged.art.Main')
         attributes([
             'Specification-Title':      'AutoRenamingTool',
             'Specification-Vendor':     'Neo Forged',
@@ -40,7 +40,7 @@ ext {
             'Implementation-Title':     'ART',
             'Implementation-Version':   project.version,
             'Implementation-Vendor':    'NeoForged'
-        ] as LinkedHashMap, 'net/minecraftforge/fart/')
+        ] as LinkedHashMap, 'net/neoforged/art/')
     }
     INITIAL_CHANGELOG_TAG = '1.0'
 }
@@ -55,13 +55,14 @@ test {
 }
 
 license {
+    skipExistingHeaders = true
     header = file('LICENSE-header.txt')
     ext.project = TITLE
 }
 
 dependencies {
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
-    api 'net.minecraftforge:srgutils:0.5.1'
+    api 'net.neoforged:srgutils:1.0.0'
     api 'net.neoforged.installertools:cli-utils:2.1.2'
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.ow2.asm:asm-commons:9.5'
@@ -92,13 +93,13 @@ shadowJar {
 
     def relocations = [
             'org.objectweb.asm',
-            'net.minecraftforge.srgutils',
+            'net.neoforged.srgutils',
             'joptsimple',
             'net.neoforged.cliutils'
     ]
 
     relocations.forEach {
-        relocate it, "net.minecraftforge.fart.relocated.$it"
+        relocate it, "net.neoforged.art.relocated.$it"
     }
 }
 

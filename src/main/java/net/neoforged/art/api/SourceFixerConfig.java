@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.api;
+package net.neoforged.art.api;
 
 /**
  * Source file naming strategy for {@link Transformer#sourceFixerFactory(SourceFixerConfig)}.

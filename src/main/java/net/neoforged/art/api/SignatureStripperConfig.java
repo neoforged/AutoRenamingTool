@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.api;
+package net.neoforged.art.api;
 
 /**
  * Signature stripper transformation strategy for {@link Transformer#signatureStripperFactory(SignatureStripperConfig)}.

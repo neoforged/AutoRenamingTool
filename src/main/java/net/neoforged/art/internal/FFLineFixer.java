@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart.internal;
+package net.neoforged.art.internal;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,12 +17,12 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import net.neoforged.art.api.Transformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
-import net.minecraftforge.fart.api.Transformer;
 
 public final class FFLineFixer implements Transformer {
     private final Map<String, NavigableMap<Integer, Integer>> classes = new HashMap<>();
