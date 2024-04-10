@@ -130,6 +130,10 @@ command-line options for controlling these transformations.
 
   This option disables this feature, preventing the `fernflower_abstract_parameter_names.txt` from being written by ART.
 
+- `--unfinal-params`
+  
+  Removes the final attribute from method parameters.
+
 ## License
 
 ART is licensed under the GNU Lesser General Public License, version 2.1. See the `LICENSE` file for the full license.
