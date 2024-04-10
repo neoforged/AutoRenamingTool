@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.minecraftforge.fart;
+package net.neoforged.art;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,6 +36,7 @@ public class Main {
         OptionSpec<File> logO    = parser.accepts("log",    "File to log data to, optional, defaults to System.out").withRequiredArg().ofType(File.class);
         OptionSpec<File> libO    = parser.acceptsAll(Arrays.asList("lib", "e"), "Additional library to use for inheritance").withRequiredArg().ofType(File.class);
         OptionSpec<Void> fixAnnO = parser.accepts("ann-fix", "Fixes misaligned parameter annotations caused by Proguard");
+        OptionSpec<Void> unfinalParams0 = parser.accepts("unfinal-params", "Remove final flag from parameters");
         OptionSpec<Void> fixRecordsO = parser.accepts("record-fix", "Fixes record components and attributes stripped by Proguard.");
         OptionSpec<IdentifierFixerConfig> fixIdsO = parser.accepts("ids-fix", "Fixes local variables that are not valid java identifiers.").withOptionalArg().withValuesConvertedBy(new EnumConverter<>(IdentifierFixerConfig.class)).defaultsTo(IdentifierFixerConfig.ALL);
         OptionSpec<SourceFixerConfig> fixSrcO = parser.accepts("src-fix", "Fixes the 'SourceFile' attribute of classes.").withOptionalArg().withValuesConvertedBy(new EnumConverter<>(SourceFixerConfig.class)).defaultsTo(SourceFixerConfig.JAVA);
@@ -116,6 +117,13 @@ public class Main {
             builder.add(Transformer.parameterAnnotationFixerFactory());
         } else {
             log.accept("Fix Annotations: false");
+        }
+
+        if (options.has(unfinalParams0)) {
+            log.accept("Unfinal Parameters: true");
+            builder.add(Transformer.parameterFinalFlagRemoverFactory());
+        } else {
+            log.accept("Unfinal Parameters: false");
         }
 
         if (options.has(fixRecordsO)) {
