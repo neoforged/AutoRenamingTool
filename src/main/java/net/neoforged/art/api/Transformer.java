@@ -14,6 +14,7 @@ import net.neoforged.art.internal.EntryImpl;
 import net.neoforged.art.internal.FFLineFixer;
 import net.neoforged.art.internal.IdentifierFixer;
 import net.neoforged.art.internal.ParameterAnnotationFixer;
+import net.neoforged.art.internal.ParameterFinalFlagRemover;
 import net.neoforged.art.internal.RecordFixer;
 import net.neoforged.art.internal.RenamingTransformer;
 import net.neoforged.art.internal.SignatureStripperTransformer;
@@ -103,6 +104,13 @@ public interface Transformer {
      */
     public static Factory parameterAnnotationFixerFactory() {
         return ctx -> ParameterAnnotationFixer.INSTANCE;
+    }
+
+    /**
+     * Create a transformer that removes the final attribute from parameter metadata.
+     */
+    public static Factory parameterFinalFlagRemoverFactory() {
+        return ctx -> ParameterFinalFlagRemover.INSTANCE;
     }
 
     /**
