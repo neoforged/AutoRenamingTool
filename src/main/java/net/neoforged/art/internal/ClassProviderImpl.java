@@ -119,7 +119,7 @@ class ClassProviderImpl implements ClassProvider {
 
             if (!node.fields.isEmpty())
                 this.fields = Collections.unmodifiableMap(node.fields.stream().map(FieldInfo::new)
-                    .collect(Collectors.toMap(FieldInfo::getName, Function.identity())));
+                    .collect(Collectors.toMap(f -> f.getName() + f.getDescriptor(), Function.identity())));
             else
                 this.fields = null;
         }
@@ -179,9 +179,25 @@ class ClassProviderImpl implements ClassProvider {
             return fieldsView;
         }
 
+        @Deprecated
         @Override
         public Optional<? extends IFieldInfo> getField(String name) {
-            return fields == null ? Optional.empty() : Optional.ofNullable(this.fields.get(name));
+            if (this.fields != null) {
+                for (Map.Entry<String, FieldInfo> entry : this.fields.entrySet()) {
+                    if (entry.getKey().split(" ")[0].equals(name)) {
+                        // Backwards compatibility not possible when duplication
+                        // on field names, constructor was crashing without descriptor logic
+                        // Let it be any in this case
+                        return Optional.of(entry.getValue());
+                    }
+                }
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<? extends IFieldInfo> getField(String name, String desc) {
+            return this.fields == null ? Optional.empty() : Optional.ofNullable(this.fields.get(name + " " + desc));
         }
 
         @Override
