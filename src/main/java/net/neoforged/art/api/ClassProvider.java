@@ -179,7 +179,9 @@ public interface ClassProvider extends Closeable {
          * @param desc the field descriptor
          * @return the field, or an empty optional if it doesn't exist
          */
-        Optional<? extends IFieldInfo> getField(String name, String desc);
+        default Optional<? extends IFieldInfo> getField(String name, String desc) {
+            return this.getField(name);
+        }
 
         /**
          * Returns all the methods declared in this class.
