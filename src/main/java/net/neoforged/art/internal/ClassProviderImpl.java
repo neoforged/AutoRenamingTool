@@ -112,7 +112,7 @@ class ClassProviderImpl implements ClassProvider {
 
             if (!node.methods.isEmpty())
                 this.methods = Collections.unmodifiableMap(node.methods.stream().map(MethodInfo::new)
-                    .collect(Collectors.toMap(m -> m.getName() + m.getDescriptor(), Function.identity())));
+                    .collect(Collectors.toMap(m -> m.getName() + " " + m.getDescriptor(), Function.identity())));
             else
                 this.methods = null;
 
@@ -133,7 +133,7 @@ class ClassProviderImpl implements ClassProvider {
             Map<String, MethodInfo> mtds = Stream.concat(
                 Arrays.stream(node.getConstructors()).map(MethodInfo::new),
                 Arrays.stream(node.getDeclaredMethods()).map(MethodInfo::new)
-            ).collect(Collectors.toMap(m -> m.getName() + m.getDescriptor(), Function.identity()));
+            ).collect(Collectors.toMap(m -> m.getName() + " " + m.getDescriptor(), Function.identity()));
 
             this.methods = mtds.isEmpty() ? null : Collections.unmodifiableMap(mtds);
 
