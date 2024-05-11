@@ -122,9 +122,9 @@ class ClassProviderImpl implements ClassProvider {
 
             if (!node.fields.isEmpty()) {
                 this.fields = Collections.unmodifiableMap(node.fields.stream().map(FieldInfo::new)
-                        .collect(Collectors.toMap(f -> f.getName() + "." + f.getDescriptor(), Function.identity())));
+                    .collect(Collectors.toMap(f -> f.getName() + "." + f.getDescriptor(), Function.identity())));
                 this.fieldsRaw = Collections.unmodifiableMap(node.fields.stream().map(FieldInfo::new)
-                        .collect(Collectors.toMap(FieldInfo::getName, Function.identity(), (a, b) -> a)));
+                    .collect(Collectors.toMap(FieldInfo::getName, Function.identity(), (a, b) -> a)));
             } else {
                 this.fields = null;
                 this.fieldsRaw = null;
@@ -149,7 +149,7 @@ class ClassProviderImpl implements ClassProvider {
                 this.fields = Collections.unmodifiableMap(Arrays.stream(flds).map(FieldInfo::new)
                     .collect(Collectors.toMap(f -> f.getName() + "." + f.getDescriptor(), Function.identity())));
                 this.fieldsRaw = Collections.unmodifiableMap(Arrays.stream(flds).map(FieldInfo::new)
-                        .collect(Collectors.toMap(FieldInfo::getName, Function.identity(), (a, b) -> a)));
+                    .collect(Collectors.toMap(FieldInfo::getName, Function.identity(), (a, b) -> a)));
             } else {
                 this.fields = null;
                 this.fieldsRaw = null;
