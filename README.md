@@ -19,7 +19,8 @@ The following are the core command-line options (options are optional unless oth
 - `--output <path>` - Path to the output JAR file; if not present, then the input JAR file is _overwritten_ with the
   output
 - `--map <path>`/`--names <path>` - Path to the mappings file, which may be of any format supported
-  by [SrgUtils][srgutils]
+  by [SrgUtils][srgutils]. Can be specified multiple times. If more than one mappings file is specified, the rest will
+  be merged with the first one sequentially, discarding any entries already present.
 - `--reverse` - When present, any provided mappings are first reversed (`A -> B` becomes `B -> A`) before its
   application
 - `--log <path>` - Path to an output file for logging; if not present, then logging is directed to the
