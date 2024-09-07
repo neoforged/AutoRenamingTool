@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -100,9 +101,12 @@ public class Main {
         // Map is optional so that we can run other fixes without renaming.
         // This does mean that it's not strictly a 'renaming' tool but screw it I like the name.
         if (options.has(mapO)) {
-            File mapF = options.valueOf(mapO);
-            log.accept("Names: " + mapF.getAbsolutePath() + "(reversed: " + options.has(reverseO) + ")");
-            IMappingFile mappings = IMappingFile.load(mapF);
+            List<File> mapF = options.valuesOf(mapO);
+            log.accept("Names: " + mapF.stream().map(File::getAbsolutePath).collect(Collectors.joining(", ")) + "(reversed: " + options.has(reverseO) + ")");
+            IMappingFile mappings = IMappingFile.load(mapF.get(0));
+            for (int i = 1; i < mapF.size(); i++) {
+                mappings = mappings.merge(IMappingFile.load(mapF.get(i)));
+            }
             if (options.has(reverseO)) {
                 mappings = mappings.reverse();
             }
