@@ -20,7 +20,7 @@ The following are the core command-line options (options are optional unless oth
   output
 - `--map <path>`/`--names <path>` - Path to the mappings file, which may be of any format supported
   by [SrgUtils][srgutils]. Can be specified multiple times. If more than one mappings file is specified, the rest will
-  be merged with the first one sequentially, discarding any entries already present.
+  be merged with the first one sequentially, only using the first entry for any duplicates across all files.
 - `--reverse` - When present, any provided mappings are first reversed (`A -> B` becomes `B -> A`) before its
   application
 - `--log <path>` - Path to an output file for logging; if not present, then logging is directed to the
