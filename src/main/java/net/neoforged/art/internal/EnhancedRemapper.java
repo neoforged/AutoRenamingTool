@@ -42,7 +42,6 @@ class EnhancedRemapper extends Remapper {
     }
 
     @Override public String mapModuleName(final String name) { return name; } // TODO? None of the mapping formats support this.
-    @Override public String mapAnnotationAttributeName(final String descriptor, final String name) { return name; } // TODO: Is this just methods?
     @Override public String mapInvokeDynamicMethodName(final String name, final String descriptor) { return name; } // TODO: Lookup how the JVM resolves this and attempt to resolve it to get the owner?
 
     @Override
@@ -113,6 +112,13 @@ class EnhancedRemapper extends Remapper {
         } else {
             return super.mapValue(value);
         }
+    }
+
+    @Override
+    public String mapAnnotationAttributeName(String descriptor, String name) {
+        return findMethod(Type.getType(descriptor).getClassName(), name, 0)
+                .map(MClass.MMethod::getMapped)
+                .orElse(name);
     }
 
     private Optional<MClass> getClass(String cls) {
