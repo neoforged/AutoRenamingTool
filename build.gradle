@@ -5,18 +5,17 @@ plugins {
     id 'signing'
     id 'java-library'
     id 'maven-publish'
-    id 'org.cadixdev.licenser' version '0.6.1'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id 'net.neoforged.gradleutils' version '3.0.0-alpha.12'
+    id 'net.neoforged.licenser' version '0.7.5'
+    id 'com.gradleup.shadow' version '8.3.4'
+    id 'net.neoforged.gradleutils' version '3.0.0'
 }
-apply plugin: 'net.neoforged.gradleutils'
 
 group 'net.neoforged'
 
 gradleutils {
     version {
         branches {
-            suffixBranch = true
+            suffixBranch()
         }
     }
     setupCentralPublishing()
