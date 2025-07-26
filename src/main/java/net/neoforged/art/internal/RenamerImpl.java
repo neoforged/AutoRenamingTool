@@ -159,7 +159,7 @@ class RenamerImpl implements Renamer {
             classProviders.add(0, inputClassesBuilder.build());
 
             // Process everything
-            logger.accept("Processing entries");
+            logger.accept("Processing " + oldEntries.size() + " entries");
             List<Entry> newEntries = async.invokeAll(oldEntries, Entry::getName, this::processEntry);
 
             logger.accept("Adding extras");
@@ -185,7 +185,7 @@ class RenamerImpl implements Renamer {
             PROGRESS.setMaxProgress(newEntries.size());
             PROGRESS.setStep("Writing output");
 
-            logger.accept("Writing Output: " + output.getAbsolutePath());
+            logger.accept("Writing " + newEntries.size() + " to output " + output.getAbsolutePath());
             try (OutputStream fos = new BufferedOutputStream(Files.newOutputStream(output.toPath()));
                  ZipOutputStream zos = new ZipOutputStream(fos)) {
 
@@ -196,7 +196,7 @@ class RenamerImpl implements Renamer {
                     if (idx != -1)
                         addDirectory(zos, seen, name.substring(0, idx));
 
-                    logger.accept("  " + name);
+                    debug.accept("  " + name);
                     ZipEntry entry = new ZipEntry(name);
                     entry.setTime(e.getTime());
                     zos.putNextEntry(entry);
@@ -240,7 +240,7 @@ class RenamerImpl implements Renamer {
         if (idx != -1)
             addDirectory(zos, seen, path.substring(0, idx));
 
-        logger.accept("  " + path + '/');
+        debug.accept("  " + path + '/');
         ZipEntry dir = new ZipEntry(path + '/');
         dir.setTime(Entry.STABLE_TIMESTAMP);
         zos.putNextEntry(dir);

@@ -99,7 +99,7 @@ public class RenamerBuilder implements Builder {
         if (this.withJvmClasspath)
             classProviders.add(ClassProvider.fromJvmClasspath());
 
-        SortedClassProvider sortedClassProvider = new SortedClassProvider(classProviders, this.logger);
+        SortedClassProvider sortedClassProvider = new SortedClassProvider(classProviders, this.debug);
         final Transformer.Context ctx = new Transformer.Context() {
             @Override
             public Consumer<String> getLog() {

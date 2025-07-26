@@ -16,12 +16,12 @@ import java.util.function.Consumer;
 
 class SortedClassProvider implements ClassProvider {
     List<ClassProvider> classProviders;
-    private final Consumer<String> log;
+    private final Consumer<String> debug;
     private final Map<String, Optional<? extends IClassInfo>> classCache = new ConcurrentHashMap<>();
 
-    SortedClassProvider(List<ClassProvider> classProviders, Consumer<String> log) {
+    SortedClassProvider(List<ClassProvider> classProviders, Consumer<String> debug) {
         this.classProviders = classProviders;
-        this.log = log;
+        this.debug = debug;
     }
 
     @Override
@@ -37,7 +37,7 @@ class SortedClassProvider implements ClassProvider {
                 return classInfo;
         }
 
-        this.log.accept("Can't Find Class: " + name);
+        this.debug.accept("Can't Find Class: " + name);
 
         return Optional.empty();
     }
