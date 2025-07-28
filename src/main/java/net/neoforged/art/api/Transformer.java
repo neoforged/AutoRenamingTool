@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;
+import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import net.neoforged.art.internal.EntryImpl;
 import net.neoforged.art.internal.FFLineFixer;
@@ -187,6 +188,17 @@ public interface Transformer {
          * @return the transformed entry
          */
         Entry process(Transformer transformer);
+
+        static Entry ofFile(String name, long time, byte[] data) {
+            if (name.endsWith(".class"))
+                return ClassEntry.create(name, time, data);
+            else if (name.equals(JarFile.MANIFEST_NAME))
+                return ManifestEntry.create(time, data);
+            else if (name.equals("javadoctor.json"))
+                return Transformer.JavadoctorEntry.create(time, data);
+            else
+                return ResourceEntry.create(name, time, data);
+        }
     }
 
     /**

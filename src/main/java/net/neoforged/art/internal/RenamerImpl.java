@@ -5,6 +5,15 @@
 
 package net.neoforged.art.internal;
 
+import net.neoforged.art.api.ClassProvider;
+import net.neoforged.art.api.Renamer;
+import net.neoforged.art.api.Transformer;
+import net.neoforged.art.api.Transformer.ClassEntry;
+import net.neoforged.art.api.Transformer.Entry;
+import net.neoforged.cliutils.JarUtils;
+import net.neoforged.cliutils.progress.ProgressReporter;
+import org.objectweb.asm.Opcodes;
+
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -19,21 +28,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-import net.neoforged.art.api.ClassProvider;
-import net.neoforged.art.api.Renamer;
-import net.neoforged.art.api.Transformer;
-import net.neoforged.art.api.Transformer.ClassEntry;
-import net.neoforged.art.api.Transformer.Entry;
-import net.neoforged.art.api.Transformer.ManifestEntry;
-import net.neoforged.art.api.Transformer.ResourceEntry;
-import net.neoforged.cliutils.JarUtils;
-import net.neoforged.cliutils.progress.ProgressReporter;
-import org.objectweb.asm.Opcodes;
 
 class RenamerImpl implements Renamer {
     private static final ProgressReporter PROGRESS = ProgressReporter.getDefault();
@@ -50,7 +51,7 @@ class RenamerImpl implements Renamer {
     private ClassProvider libraryClasses;
 
     RenamerImpl(List<File> libraries, List<Transformer> transformers, SortedClassProvider sortedClassProvider, List<ClassProvider> classProviders,
-            int threads, Consumer<String> logger, Consumer<String> debug) {
+                int threads, Consumer<String> logger, Consumer<String> debug) {
         this.libraries = libraries;
         this.transformers = transformers;
         this.sortedClassProvider = sortedClassProvider;
@@ -98,7 +99,7 @@ class RenamerImpl implements Renamer {
         List<Entry> oldEntries = new ArrayList<>();
         try (ZipFile in = new ZipFile(input)) {
             int amount = 0;
-            for (Enumeration<? extends ZipEntry> entries = in.entries(); entries.hasMoreElements();) {
+            for (Enumeration<? extends ZipEntry> entries = in.entries(); entries.hasMoreElements(); ) {
                 final ZipEntry e = entries.nextElement();
                 if (e.isDirectory())
                     continue;
@@ -108,14 +109,7 @@ class RenamerImpl implements Renamer {
                     data = readAllBytes(entryInput, e.getSize());
                 }
 
-                if (name.endsWith(".class"))
-                    oldEntries.add(ClassEntry.create(name, e.getTime(), data));
-                else if (name.equals(MANIFEST_NAME))
-                    oldEntries.add(ManifestEntry.create(e.getTime(), data));
-                else if (name.equals("javadoctor.json"))
-                    oldEntries.add(Transformer.JavadoctorEntry.create(e.getTime(), data));
-                else
-                    oldEntries.add(ResourceEntry.create(name, e.getTime(), data));
+                oldEntries.add(Entry.ofFile(name, e.getTime(), data));
 
                 if ((++amount) % 10 == 0) {
                     PROGRESS.setProgress(amount);
@@ -125,96 +119,116 @@ class RenamerImpl implements Renamer {
             throw new RuntimeException("Could not parse input: " + input.getAbsolutePath(), e);
         }
 
+        List<Entry> newEntries = run(oldEntries);
+
+        Set<String> seen = new HashSet<>();
+        String dupes = newEntries.stream().map(Entry::getName)
+                .filter(n -> !seen.add(n))
+                .sorted()
+                .collect(Collectors.joining(", "));
+        if (!dupes.isEmpty())
+            throw new IllegalStateException("Duplicate entries detected: " + dupes);
+
+        seen.clear();
+
+        PROGRESS.setMaxProgress(newEntries.size());
+        PROGRESS.setStep("Writing output");
+
+        if (!output.getParentFile().exists())
+            output.getParentFile().mkdirs();
+
+        logger.accept("Writing " + newEntries.size() + " to output " + output.getAbsolutePath());
+        try (OutputStream fos = new BufferedOutputStream(Files.newOutputStream(output.toPath()));
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+
+            int amount = 0;
+            for (Entry e : newEntries) {
+                String name = e.getName();
+                int idx = name.lastIndexOf('/');
+                if (idx != -1)
+                    addDirectory(zos, seen, name.substring(0, idx));
+
+                debug.accept("  " + name);
+                ZipEntry entry = new ZipEntry(name);
+                entry.setTime(e.getTime());
+                zos.putNextEntry(entry);
+                zos.write(e.getData());
+                zos.closeEntry();
+
+                if ((++amount) % 10 == 0) {
+                    PROGRESS.setProgress(amount);
+                }
+            }
+
+            PROGRESS.setProgress(amount);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not write output to file: " + output.getAbsolutePath(), e);
+        }
+    }
+
+    @Override
+    public List<Entry> run(List<Entry> entries) {
+        ExecutorService asyncService;
+        if (threads <= 0)
+            throw new IllegalArgumentException("Really.. no threads to process things? What do you want me to use a genie?");
+        else if (threads == 1)
+            asyncService = Executors.newSingleThreadExecutor();
+        else
+            asyncService = Executors.newWorkStealingPool(threads);
+
+        try {
+            return run(entries, asyncService);
+        } finally {
+            asyncService.shutdown();
+        }
+    }
+
+    @Override
+    public List<Entry> run(List<Entry> oldEntries, ExecutorService executorService) {
         this.sortedClassProvider.clearCache();
         ArrayList<ClassProvider> classProviders = new ArrayList<>(this.classProviders);
         classProviders.add(0, this.libraryClasses);
         this.sortedClassProvider.classProviders = classProviders;
 
-        AsyncHelper async = new AsyncHelper(threads);
-        try {
+        AsyncHelper async = new AsyncHelper(executorService);
 
-            /* Disabled until we do something with it
-            // Gather original file Hashes, so that we can detect changes and update the manifest if necessary
-            log("Gathering original hashes");
-            Map<String, String> oldHashes = async.invokeAll(oldEntries,
-                e -> new Pair<>(e.getName(), HashFunction.SHA256.hash(e.getData()))
-            ).stream().collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-            */
+        /* Disabled until we do something with it
+        // Gather original file Hashes, so that we can detect changes and update the manifest if necessary
+        log("Gathering original hashes");
+        Map<String, String> oldHashes = async.invokeAll(oldEntries,
+            e -> new Pair<>(e.getName(), HashFunction.SHA256.hash(e.getData()))
+        ).stream().collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+        */
 
-            PROGRESS.setProgress(0);
-            PROGRESS.setIndeterminate(true);
-            PROGRESS.setStep("Processing entries");
+        PROGRESS.setProgress(0);
+        PROGRESS.setIndeterminate(true);
+        PROGRESS.setStep("Processing entries");
 
-            List<ClassEntry> ourClasses = oldEntries.stream()
+        List<ClassEntry> ourClasses = oldEntries.stream()
                 .filter(e -> e instanceof ClassEntry && !e.getName().startsWith("META-INF/"))
                 .map(ClassEntry.class::cast)
                 .collect(Collectors.toList());
 
-            // Add the original classes to the inheritance map, TODO: Multi-Release somehow?
-            logger.accept("Adding input to inheritance map");
-            ClassProvider.Builder inputClassesBuilder = ClassProvider.builder();
-            async.consumeAll(ourClasses, ClassEntry::getClassName, c ->
+        // Add the original classes to the inheritance map, TODO: Multi-Release somehow?
+        logger.accept("Adding input to inheritance map");
+        ClassProvider.Builder inputClassesBuilder = ClassProvider.builder();
+        async.consumeAll(ourClasses, ClassEntry::getClassName, c ->
                 inputClassesBuilder.addClass(c.getName().substring(0, c.getName().length() - 6), c.getData())
-            );
-            classProviders.add(0, inputClassesBuilder.build());
+        );
+        classProviders.add(0, inputClassesBuilder.build());
 
-            // Process everything
-            logger.accept("Processing " + oldEntries.size() + " entries");
-            List<Entry> newEntries = async.invokeAll(oldEntries, Entry::getName, this::processEntry);
+        // Process everything
+        logger.accept("Processing " + oldEntries.size() + " entries");
+        List<Entry> newEntries = async.invokeAll(oldEntries, Entry::getName, this::processEntry);
 
-            logger.accept("Adding extras");
-            transformers.forEach(t -> newEntries.addAll(t.getExtras()));
+        logger.accept("Adding extras");
+        transformers.forEach(t -> newEntries.addAll(t.getExtras()));
 
-            Set<String> seen = new HashSet<>();
-            String dupes = newEntries.stream().map(Entry::getName)
-                .filter(n -> !seen.add(n))
-                .sorted()
-                .collect(Collectors.joining(", "));
-            if (!dupes.isEmpty())
-                throw new IllegalStateException("Duplicate entries detected: " + dupes);
+        // We care about stable output, so sort, and single thread write.
+        logger.accept("Sorting");
+        newEntries.sort(this::compare);
 
-            // We care about stable output, so sort, and single thread write.
-            logger.accept("Sorting");
-            Collections.sort(newEntries, this::compare);
-
-            if (!output.getParentFile().exists())
-                output.getParentFile().mkdirs();
-
-            seen.clear();
-
-            PROGRESS.setMaxProgress(newEntries.size());
-            PROGRESS.setStep("Writing output");
-
-            logger.accept("Writing " + newEntries.size() + " to output " + output.getAbsolutePath());
-            try (OutputStream fos = new BufferedOutputStream(Files.newOutputStream(output.toPath()));
-                 ZipOutputStream zos = new ZipOutputStream(fos)) {
-
-                int amount = 0;
-                for (Entry e : newEntries) {
-                    String name = e.getName();
-                    int idx = name.lastIndexOf('/');
-                    if (idx != -1)
-                        addDirectory(zos, seen, name.substring(0, idx));
-
-                    debug.accept("  " + name);
-                    ZipEntry entry = new ZipEntry(name);
-                    entry.setTime(e.getTime());
-                    zos.putNextEntry(entry);
-                    zos.write(e.getData());
-                    zos.closeEntry();
-
-                    if ((++amount) % 10 == 0) {
-                        PROGRESS.setProgress(amount);
-                    }
-                }
-
-                PROGRESS.setProgress(amount);
-            } catch (IOException e) {
-                throw new RuntimeException("Could not write output to file: " + output.getAbsolutePath(), e);
-            }
-        } finally {
-            async.shutdown();
-        }
+        return newEntries;
     }
 
     private byte[] readAllBytes(InputStream in, long size) throws IOException {
@@ -262,7 +276,7 @@ class RenamerImpl implements Renamer {
         if (MANIFEST_NAME.equals(o1.getName()))
             return MANIFEST_NAME.equals(o2.getName()) ? 0 : -1;
         if (MANIFEST_NAME.equals(o2.getName()))
-            return MANIFEST_NAME.equals(o1.getName()) ? 0 :  1;
+            return MANIFEST_NAME.equals(o1.getName()) ? 0 : 1;
         return o1.getName().compareTo(o2.getName());
     }
 
