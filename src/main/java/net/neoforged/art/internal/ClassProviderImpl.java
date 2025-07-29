@@ -95,7 +95,10 @@ class ClassProviderImpl implements ClassProvider {
         private final Access access;
         private final String superName;
         private final List<String> interfaces;
+        // "fieldName descriptor" -> "info"
         private final Map<String, FieldInfo> fields;
+        // "fieldName"            -> "info"
+        private final Map<String, FieldInfo> fieldsRaw;
         private Collection<FieldInfo> fieldsView;
         private final Map<String, MethodInfo> methods;
         private Collection<MethodInfo> methodsView;
@@ -117,11 +120,15 @@ class ClassProviderImpl implements ClassProvider {
                 this.methods = null;
 
 
-            if (!node.fields.isEmpty())
+            if (!node.fields.isEmpty()) {
                 this.fields = Collections.unmodifiableMap(node.fields.stream().map(FieldInfo::new)
-                    .collect(Collectors.toMap(FieldInfo::getName, Function.identity())));
-            else
+                    .collect(Collectors.toMap(f -> f.getName() + "." + f.getDescriptor(), Function.identity())));
+                this.fieldsRaw = Collections.unmodifiableMap(node.fields.stream().map(FieldInfo::new)
+                    .collect(Collectors.toMap(FieldInfo::getName, Function.identity(), (a, b) -> a)));
+            } else {
                 this.fields = null;
+                this.fieldsRaw = null;
+            }
         }
 
         ClassInfo(Class<?> node) {
@@ -139,10 +146,14 @@ class ClassProviderImpl implements ClassProvider {
 
             Field[] flds = node.getDeclaredFields();
             if (flds.length > 0) {
-                this.fields = Collections.unmodifiableMap(Arrays.asList(flds).stream().map(FieldInfo::new)
-                    .collect(Collectors.toMap(FieldInfo::getName, Function.identity())));
-            } else
+                this.fields = Collections.unmodifiableMap(Arrays.stream(flds).map(FieldInfo::new)
+                    .collect(Collectors.toMap(f -> f.getName() + "." + f.getDescriptor(), Function.identity())));
+                this.fieldsRaw = Collections.unmodifiableMap(Arrays.stream(flds).map(FieldInfo::new)
+                    .collect(Collectors.toMap(FieldInfo::getName, Function.identity(), (a, b) -> a)));
+            } else {
                 this.fields = null;
+                this.fieldsRaw = null;
+            }
         }
 
         private static String nameToBytecode(Class<?> cls) {
@@ -179,9 +190,15 @@ class ClassProviderImpl implements ClassProvider {
             return fieldsView;
         }
 
+        @Deprecated
         @Override
         public Optional<? extends IFieldInfo> getField(String name) {
-            return fields == null ? Optional.empty() : Optional.ofNullable(this.fields.get(name));
+            return this.fieldsRaw == null ? Optional.empty() : Optional.ofNullable(this.fieldsRaw.get(name));
+        }
+
+        @Override
+        public Optional<? extends IFieldInfo> getField(String name, String desc) {
+            return this.fields == null ? Optional.empty() : Optional.ofNullable(this.fields.get(name + "." + desc));
         }
 
         @Override
