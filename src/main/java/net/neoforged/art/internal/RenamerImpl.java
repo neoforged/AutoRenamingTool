@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -177,28 +179,28 @@ class RenamerImpl implements Renamer {
             asyncService = Executors.newWorkStealingPool(threads);
 
         try {
-            return run(entries, asyncService);
+            return run(entries, asyncService).get();
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e.getCause());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
         } finally {
             asyncService.shutdown();
         }
     }
 
     @Override
-    public List<Entry> run(List<Entry> oldEntries, ExecutorService executorService) {
+    public CompletableFuture<List<Entry>> run(List<Entry> oldEntries, ExecutorService executorService) {
+        if (!this.setup)
+            this.setup();
+
         this.sortedClassProvider.clearCache();
         ArrayList<ClassProvider> classProviders = new ArrayList<>(this.classProviders);
         classProviders.add(0, this.libraryClasses);
         this.sortedClassProvider.classProviders = classProviders;
 
         AsyncHelper async = new AsyncHelper(executorService);
-
-        /* Disabled until we do something with it
-        // Gather original file Hashes, so that we can detect changes and update the manifest if necessary
-        log("Gathering original hashes");
-        Map<String, String> oldHashes = async.invokeAll(oldEntries,
-            e -> new Pair<>(e.getName(), HashFunction.SHA256.hash(e.getData()))
-        ).stream().collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-        */
 
         PROGRESS.setProgress(0);
         PROGRESS.setIndeterminate(true);
@@ -211,24 +213,30 @@ class RenamerImpl implements Renamer {
 
         // Add the original classes to the inheritance map, TODO: Multi-Release somehow?
         logger.accept("Adding input to inheritance map");
+
         ClassProvider.Builder inputClassesBuilder = ClassProvider.builder();
-        async.consumeAll(ourClasses, ClassEntry::getClassName, c ->
-                inputClassesBuilder.addClass(c.getName().substring(0, c.getName().length() - 6), c.getData())
-        );
-        classProviders.add(0, inputClassesBuilder.build());
 
-        // Process everything
-        logger.accept("Processing " + oldEntries.size() + " entries");
-        List<Entry> newEntries = async.invokeAll(oldEntries, Entry::getName, this::processEntry);
+        return async
+                .submitConsumeAll(ourClasses, ClassEntry::getClassName, c ->
+                        inputClassesBuilder.addClass(c.getName().substring(0, c.getName().length() - 6), c.getData())
+                )
+                .thenRun(() -> classProviders.add(0, inputClassesBuilder.build()))
+                .thenCompose(ignored -> {
+                    // Process everything
+                    logger.accept("Processing " + oldEntries.size() + " entries");
 
-        logger.accept("Adding extras");
-        transformers.forEach(t -> newEntries.addAll(t.getExtras()));
+                    return async.submitInvokeAll(oldEntries, Entry::getName, this::processEntry);
+                })
+                .thenApply(newEntries -> {
+                    logger.accept("Adding extras");
+                    transformers.forEach(t -> newEntries.addAll(t.getExtras()));
 
-        // We care about stable output, so sort, and single thread write.
-        logger.accept("Sorting");
-        newEntries.sort(this::compare);
+                    // We care about stable output, so sort, and single thread write.
+                    logger.accept("Sorting");
+                    newEntries.sort(this::compare);
 
-        return newEntries;
+                    return newEntries;
+                });
     }
 
     private byte[] readAllBytes(InputStream in, long size) throws IOException {

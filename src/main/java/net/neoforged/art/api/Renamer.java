@@ -9,6 +9,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
@@ -43,7 +44,7 @@ public interface Renamer extends Closeable {
      * Same as {@link #run(List)}, but ignores the configured {@link RenamerBuilder#threads(int)} and instead uses the
      * given {@code executorService} for scheduling asynchronous tasks.
      */
-    List<Transformer.Entry> run(List<Transformer.Entry> entries, ExecutorService executorService);
+    CompletableFuture<List<Transformer.Entry>> run(List<Transformer.Entry> entries, ExecutorService executorService);
 
     /**
      * Creates a default instance of a {@link Builder}.
