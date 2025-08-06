@@ -29,9 +29,13 @@ public interface Renamer extends Closeable {
     void run(File input, File output);
 
     /**
-     * Runs the renamer and all registered transformers on the given input file stream,
-     * and then outputs it to the output JAR file.
-     * This method is guaranteed to be repeatable with multiple inputs and outputs.
+     * Runs the renamer and all registered transformers on the given input entries.
+     * <p>This method is guaranteed to be repeatable with multiple inputs and outputs.
+     *
+     * @return The entries of the renamed Jar file. Entries will be returned in the same order
+     * for the same input entries, but the order is otherwise undefined. The returned list may
+     * contain more or fewer entries than the input.
+     *
      */
     List<Transformer.Entry> run(List<Transformer.Entry> entries);
 
