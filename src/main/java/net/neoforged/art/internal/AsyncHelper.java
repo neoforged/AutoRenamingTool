@@ -45,7 +45,7 @@ class AsyncHelper {
                     String inputName = namer.apply(input);
                     throw new RuntimeException("Failed to execute task " + inputName, e);
                 }
-            });
+            }, exec);
         }
 
         return CompletableFuture.allOf(futures);
@@ -91,7 +91,7 @@ class AsyncHelper {
                     String inputName = namer.apply(input);
                     throw new RuntimeException("Failed to execute task " + inputName, e);
                 }
-            });
+            }, exec);
         }
 
         return CompletableFuture.allOf(futures).thenApply(ignored -> {
@@ -116,7 +116,7 @@ class AsyncHelper {
                     String taskDescription = tasks.get(taskIndex).getLeft();
                     throw new RuntimeException("Failed to execute task " + taskDescription, e);
                 }
-            });
+            }, exec);
         }
 
         return CompletableFuture.allOf(futures).thenApply(ignored -> {
