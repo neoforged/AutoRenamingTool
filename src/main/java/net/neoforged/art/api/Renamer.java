@@ -7,6 +7,9 @@ package net.neoforged.art.api;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import net.neoforged.art.internal.RenamerBuilder;
@@ -24,6 +27,23 @@ public interface Renamer extends Closeable {
      * @param output the output JAR file location
      */
     void run(File input, File output);
+
+    /**
+     * Runs the renamer and all registered transformers on the given input entries.
+     * <p>This method is guaranteed to be repeatable with multiple inputs and outputs.
+     *
+     * @return The entries of the renamed Jar file. Entries will be returned in the same order
+     * for the same input entries, but the order is otherwise undefined. The returned list may
+     * contain more or fewer entries than the input.
+     *
+     */
+    List<Transformer.Entry> run(List<Transformer.Entry> entries);
+
+    /**
+     * Same as {@link #run(List)}, but ignores the configured {@link RenamerBuilder#threads(int)} and instead uses the
+     * given {@code executorService} for scheduling asynchronous tasks.
+     */
+    CompletableFuture<List<Transformer.Entry>> run(List<Transformer.Entry> entries, ExecutorService executorService);
 
     /**
      * Creates a default instance of a {@link Builder}.
