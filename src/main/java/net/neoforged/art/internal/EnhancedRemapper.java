@@ -116,7 +116,7 @@ class EnhancedRemapper extends Remapper {
 
     @Override
     public String mapAnnotationAttributeName(String descriptor, String name) {
-        return findMethod(Type.getType(descriptor).getClassName(), name, 0)
+        return findMethod(Type.getType(descriptor).getInternalName(), name, 0)
                 .map(MClass.MMethod::getMapped)
                 .orElse(name);
     }
