@@ -8,60 +8,48 @@ package net.neoforged.art.internal;
 import net.neoforged.art.api.SignatureStripperConfig;
 import net.neoforged.art.api.Transformer;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 public class SignatureStripperTransformer implements Transformer {
-    private final Consumer<String> log;
-    private final SignatureStripperConfig config;
+    private static final String DIGEST_SUFFIX = "-digest";
+    private static final int DIGEST_SUFFIX_LENGTH = DIGEST_SUFFIX.length();
 
-    public SignatureStripperTransformer(Consumer<String> log, SignatureStripperConfig config) {
-        this.log = log;
-        this.config = config;
+    public SignatureStripperTransformer(SignatureStripperConfig config) {
+        if (config != SignatureStripperConfig.ALL) {
+            throw new IllegalStateException("No other mode than ALL is currently supported.");
+        }
     }
 
     @Override
     public ManifestEntry process(ManifestEntry entry) {
         // Remove all signature entries
         // see signed jar spec: https://docs.oracle.com/javase/7/docs/technotes/guides/jar/jar.html#Signed_JAR_File
-        try {
-            final Manifest manifest = new Manifest(new ByteArrayInputStream(entry.getData()));
-            boolean found = false;
-            for (final Iterator<Map.Entry<String, Attributes>> it = manifest.getEntries().entrySet().iterator(); it.hasNext();) {
-                final Map.Entry<String, Attributes> section = it.next();
-                for (final Iterator<Map.Entry<Object, Object>> attrIter = section.getValue().entrySet().iterator(); attrIter.hasNext();) {
-                    final Map.Entry<Object, Object> attribute = attrIter.next();
-                    final String key = attribute.getKey().toString().toLowerCase(Locale.ROOT); // spec says this is case-insensitive
-                    if (key.endsWith("-digest")) { // assume that this is a signature entry
-                        if (this.config == SignatureStripperConfig.ALL) {
-                            attrIter.remove();
-                        }
-                        found = true;
-                    }
-                    // keep going even if we've found an attribute -- multiple hash formats can be specified for each file
-                }
-
-                if (section.getValue().isEmpty()) {
+        final Manifest manifest = new Manifest(entry.getManifest());
+        boolean madeChanges = false;
+        for (final Iterator<Attributes> it = manifest.getEntries().values().iterator(); it.hasNext(); ) {
+            final Attributes entryAttributes = it.next();
+            if (entryAttributes.keySet().removeIf(SignatureStripperTransformer::isDigestAttribute)) {
+                madeChanges = true;
+                if (entryAttributes.isEmpty()) {
                     it.remove();
                 }
             }
-            if (found) {
-                try (final ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                    manifest.write(os);
-                    return ManifestEntry.create(entry.getTime(), os.toByteArray());
-                }
-            }
-        } catch (final IOException ex) {
-            log.accept("Failed to remove signature entries from manifest: " + ex);
+        }
+        if (madeChanges) {
+            return ManifestEntry.create(entry.getTime(), manifest);
         }
         return entry;
+    }
+
+    private static boolean isDigestAttribute(Object key) {
+        String attributeName = key.toString(); // Luckily, Attributes.Name will not allocate on this
+        if (attributeName.length() <= DIGEST_SUFFIX_LENGTH) {
+            return false; // String cannot be shorter than x-digest and still have an algorithm ID prefix.
+        }
+        // This is a case-insensitive endsWith
+        return attributeName.regionMatches(true, attributeName.length() - DIGEST_SUFFIX_LENGTH, DIGEST_SUFFIX, 0, DIGEST_SUFFIX_LENGTH);
     }
 
     @Override

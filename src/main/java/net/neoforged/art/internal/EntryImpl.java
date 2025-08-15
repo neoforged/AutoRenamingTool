@@ -7,15 +7,29 @@ package net.neoforged.art.internal;
 
 import net.neoforged.art.api.Transformer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Objects;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+
 public abstract class EntryImpl implements Transformer.Entry {
     private final String name;
     private final long time;
-    private final byte[] data;
+    private byte[] data;
 
     protected EntryImpl(String name, long time, byte[] data) {
         this.name = name;
         this.time = time;
-        this.data = data;
+        this.data = Objects.requireNonNull(data, "data");
+    }
+
+    // Used by lazily computed entries
+    protected EntryImpl(String name, long time) {
+        this.name = name;
+        this.time = time;
     }
 
     @Override
@@ -31,6 +45,14 @@ public abstract class EntryImpl implements Transformer.Entry {
     @Override
     public byte[] getData() {
         return this.data;
+    }
+
+    // Used for lazily computed entries
+    protected final void setData(byte[] data) {
+        if (this.data != null) {
+            throw new IllegalStateException("Can only set data if it wasn't set already.");
+        }
+        this.data = data;
     }
 
     public static class ClassEntry extends EntryImpl implements Transformer.ClassEntry {
@@ -86,8 +108,41 @@ public abstract class EntryImpl implements Transformer.Entry {
     }
 
     public static class ManifestEntry extends EntryImpl implements Transformer.ManifestEntry {
+        private Manifest manifest;
+
         public ManifestEntry(long time, byte[] data) {
-            super("META-INF/MANIFEST.MF", time, data);
+            super(JarFile.MANIFEST_NAME, time, data);
+        }
+
+        public ManifestEntry(long time, Manifest manifest) {
+            super(JarFile.MANIFEST_NAME, time);
+            this.manifest = Objects.requireNonNull(manifest, "manifest");
+        }
+
+        @Override
+        public Manifest getManifest() {
+            if (manifest == null) {
+                try {
+                    manifest = new Manifest(new ByteArrayInputStream(getData()));
+                } catch (IOException e) {
+                    throw new UncheckedIOException("Couldn't parse manifest", e);
+                }
+            }
+            return manifest;
+        }
+
+        @Override
+        public byte[] getData() {
+            if (super.getData() == null) {
+                try {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    manifest.write(bos);
+                    setData(bos.toByteArray());
+                } catch (IOException e) {
+                    throw new UncheckedIOException("Couldn't serialize manifest", e);
+                }
+            }
+            return super.getData();
         }
 
         @Override

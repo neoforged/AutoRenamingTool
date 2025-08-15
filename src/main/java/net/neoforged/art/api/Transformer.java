@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import net.neoforged.art.internal.EntryImpl;
 import net.neoforged.art.internal.FFLineFixer;
@@ -152,7 +153,7 @@ public interface Transformer {
      * @return a factory for a transformer that strips signatures
      */
     public static Factory signatureStripperFactory(SignatureStripperConfig config) {
-        return ctx -> new SignatureStripperTransformer(ctx.getLog(), config);
+        return ctx -> new SignatureStripperTransformer(config);
     }
 
     /**
@@ -277,6 +278,13 @@ public interface Transformer {
      */
     public interface ManifestEntry extends Entry {
         /**
+         * Gets the parsed Manifest. It will be parsed on-demand if necessary.
+         * Modifying this manifest will result in undefined behavior if {@link #getData()} is called later,
+         * since the entry cannot detect the changed data. Always construct a new entry if you modify the manifest.
+         */
+        Manifest getManifest();
+
+        /**
          * Creates a default manifest entry.
          * The name of this entry is always {@code META-INF/MANIFEST.MF}.
          *
@@ -286,6 +294,18 @@ public interface Transformer {
          */
         static ManifestEntry create(long time, byte[] data) {
             return new EntryImpl.ManifestEntry(time, data);
+        }
+
+        /**
+         * Creates a default manifest entry.
+         * The name of this entry is always {@code META-INF/MANIFEST.MF}.
+         *
+         * @param time the last modification time
+         * @param manifest the manifest content
+         * @return the manifest entry
+         */
+        static ManifestEntry create(long time, Manifest manifest) {
+            return new EntryImpl.ManifestEntry(time, manifest);
         }
     }
 
