@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import net.neoforged.art.api.ClassProvider;
 import net.neoforged.art.api.Transformer;
@@ -80,6 +82,36 @@ public class RenamingTransformer implements Transformer {
     }
 
     @Override
+    public ManifestEntry process(ManifestEntry entry) {
+        // Remap manifest entries
+        boolean hasRemapped = false;
+        Manifest remappedManifest = new Manifest(entry.getManifest());
+        remappedManifest.getEntries().clear();
+        for (Map.Entry<String, Attributes> manifestEntry : entry.getManifest().getEntries().entrySet()) {
+            String entryName = manifestEntry.getKey();
+            Attributes entryAttributes = manifestEntry.getValue();
+
+            // Check if the entry references a remapped class, and rename its entry key if that is the case
+            if (entryName.endsWith(".class")) {
+                String oldName = entryName.replace('/', '.').substring(0, entryName.length() - ".class".length());
+                String newName = this.remapper.map(oldName);
+                if (!oldName.equals(newName)) {
+                    hasRemapped = true;
+                    entryName = newName.replace('.', '/') + ".class";
+                }
+            }
+
+            remappedManifest.getEntries().put(entryName, entryAttributes);
+        }
+
+        if (!hasRemapped) {
+            return entry; // No remapping has taken place
+        }
+
+        return ManifestEntry.create(Entry.STABLE_TIMESTAMP, remappedManifest);
+    }
+
+    @Override
     public Collection<? extends Entry> getExtras() {
         if (abstractParams.isEmpty() || !collectAbstractParams)
             return Collections.emptyList();
@@ -88,6 +120,6 @@ public class RenamingTransformer implements Transformer {
     }
 
     void storeNames(String className, String methodName, String methodDescriptor, Collection<String> paramNames) {
-        abstractParams.add(className + ' ' + methodName + ' ' + methodDescriptor + ' ' + paramNames.stream().collect(Collectors.joining(" ")));
+        abstractParams.add(className + ' ' + methodName + ' ' + methodDescriptor + ' ' + String.join(" ", paramNames));
     }
 }
