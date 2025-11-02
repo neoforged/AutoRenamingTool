@@ -6,17 +6,6 @@
 package net.neoforged.art.internal;
 
 import com.google.gson.JsonObject;
-import net.neoforged.art.api.ClassProvider;
-import net.neoforged.art.api.Transformer;
-import net.neoforged.javadoctor.io.gson.GsonJDocIO;
-import net.neoforged.javadoctor.spec.ClassJavadoc;
-import net.neoforged.javadoctor.spec.DocReferences;
-import net.neoforged.javadoctor.spec.JavadoctorInformation;
-import net.neoforged.srgutils.IMappingFile;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.commons.ClassRemapper;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +17,16 @@ import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import net.neoforged.art.api.ClassProvider;
+import net.neoforged.art.api.Transformer;
+import net.neoforged.javadoctor.io.gson.GsonJDocIO;
+import net.neoforged.javadoctor.spec.ClassJavadoc;
+import net.neoforged.javadoctor.spec.DocReferences;
+import net.neoforged.javadoctor.spec.JavadoctorInformation;
+import net.neoforged.srgutils.IMappingFile;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.commons.ClassRemapper;
 
 public class RenamingTransformer implements Transformer {
     private static final String ABSTRACT_FILE = "fernflower_abstract_parameter_names.txt";
