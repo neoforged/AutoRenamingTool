@@ -63,9 +63,9 @@ dependencies {
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
     api 'net.neoforged:srgutils:1.0.0'
     api 'net.neoforged.installertools:cli-utils:2.1.4'
-    implementation 'org.ow2.asm:asm:9.5'
-    implementation 'org.ow2.asm:asm-commons:9.5'
-    implementation 'org.ow2.asm:asm-tree:9.5'
+    implementation 'org.ow2.asm:asm:9.9.1'
+    implementation 'org.ow2.asm:asm-commons:9.9.1'
+    implementation 'org.ow2.asm:asm-tree:9.9.1'
     implementation 'net.neoforged.javadoctor:gson-io:2.0.17'
 
     testImplementation(platform('org.junit:junit-bom:5.8.1'))
